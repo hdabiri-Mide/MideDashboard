@@ -240,9 +240,6 @@
 
 
 ############################################################# Rev 2
-# ================== STREAMLIT DASHBOARD (Channel 80) ==================
-# Author: Hamed Dabiri + M365 Copilot
-# Description: enDAQ SHM Dashboard forcing channel index 80
 
 # ================== IMPORTS ==================
 import streamlit as st
@@ -252,24 +249,20 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.graph_objects as go
 import tempfile
-import re
 import endaq
 
 from scipy.fft import fft
 from scipy.signal import welch, get_window, find_peaks
 from sklearn.ensemble import IsolationForest
-from pandas.api.types import is_numeric_dtype
 
 # ================== PAGE ==================
 st.set_page_config(layout="wide")
 st.title("📊 enDAQ SHM Dashboard (Channel 80)")
 
-DEBUG = False  # set True to print diagnostics in the app
-
 # ================== SIDEBAR ==================
 st.sidebar.header("General Settings")
 
-start_idx = st.sidebar.slider("Start Index", 0, 200000, 0)
+start_idx = st.sidebar.slider("Start Index", 0, 200000, 50000)
 end_idx = st.sidebar.slider("End Index", 10000, 300000, 60000)
 
 ma_window = st.sidebar.slider("Moving Average Window", 1, 50, 5)
@@ -319,116 +312,44 @@ contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.01)
 # ================== FILE ==================
 uploaded_file = st.file_uploader("Upload IDE file", type=["ide"])
 
-# ================== HELPERS ==================
-def normalize_table(raw_table):
-    """Normalize any object returned by endaq.ide.get_channel_table into a DataFrame."""
-    if raw_table is None:
-        return pd.DataFrame()
+# ================== FUNCTIONS ==================
 
-    try:
-        if isinstance(raw_table, pd.DataFrame):
-            table = raw_table.copy()
-        elif isinstance(raw_table, (list, tuple)):
-            if len(raw_table) == 0:
-                table = pd.DataFrame()
-            elif isinstance(raw_table[0], dict):
-                table = pd.DataFrame.from_records(raw_table)
-            else:
-                table = pd.DataFrame({"value": raw_table})
-        elif isinstance(raw_table, dict):
-            vals = list(raw_table.values())
-            if all(isinstance(v, (list, tuple, np.ndarray)) for v in vals):
-                table = pd.DataFrame(raw_table)
-            else:
-                table = pd.DataFrame([raw_table])
-        else:
-            table = pd.DataFrame([{"value": raw_table}])
-    except Exception as e:
-        st.error(f"Failed to create channel table: {e}")
-        return pd.DataFrame()
-
-    # normalize column names
-    safe_cols = []
-    for c in table.columns:
-        try:
-            safe_cols.append(str(c).lower())
-        except Exception:
-            safe_cols.append("unnamed")
-    table.columns = safe_cols
-    return table
-
-def find_col(table, names):
-    for n in names:
-        n = str(n).lower()
-        for c in table.columns:
-            if n in c:
-                return c
-    return None
-
-def detect_acc_axes(df):
-    """Detect axis columns, prefer x/y/z numeric columns; fallback to first 3 numeric."""
-    cols = list(df.columns)
-    numeric_cols = [c for c in cols if is_numeric_dtype(df[c])]
-    xyz_accel = []
-    for c in numeric_cols:
-        name = str(c).lower()
-        has_xyz = re.search(r'\b(x|y|z)\b', name) is not None or any(k in name for k in [" x", " y", " z"])
-        has_acc = any(k in name for k in ["acc", "accel", "g"])
-        if has_xyz and has_acc:
-            xyz_accel.append(c)
-
-    if len(xyz_accel) < 3:
-        xyz_any = [c for c in numeric_cols if re.search(r'\b(x|y|z)\b', str(c), re.I)]
-        merged = []
-        for c in xyz_accel + xyz_any:
-            if c not in merged:
-                merged.append(c)
-        xyz_accel = merged
-
-    if len(xyz_accel) == 0:
-        xyz_accel = numeric_cols[:3]
-
-    return xyz_accel[:3]
-
-def apply_fft_advanced(signal_data):
-    arr = np.array(signal_data, dtype=float)  # copy
-    n = len(arr)
+def apply_fft(signal_data):
+    n = len(signal_data)
 
     if use_averaging or use_overlap:
         step = int(window_size * (1 - overlap_factor)) if use_overlap else window_size
-        if step <= 0:
-            step = 1
-        freqs = np.fft.fftfreq(window_size, 1/fs)[:window_size // 2]
+        freqs = np.fft.fftfreq(window_size, 1/fs)[:window_size//2]
         fft_all = []
 
         for start in range(0, n - window_size + 1, step):
-            seg = arr[start:start + window_size].copy()
+            seg = signal_data[start:start+window_size]
+
             if use_windowing:
                 seg *= get_window(window_type, window_size)
-            fft_all.append(np.abs(fft(seg)[:window_size // 2]))
 
-        if len(fft_all) == 0:
-            seg = arr.copy()
-            if use_windowing:
-                seg *= get_window(window_type, n)
-            fft_vals = np.abs(fft(seg))
-            freqs_full = np.fft.fftfreq(n, 1/fs)
-            return freqs_full[:n // 2], fft_vals[:n // 2]
+            fft_all.append(np.abs(fft(seg)[:window_size//2]))
 
         fft_all = np.array(fft_all)
-        return (freqs, np.mean(fft_all, axis=0)) if use_averaging else (freqs, fft_all[0])
+
+        if use_averaging:
+            return freqs, np.mean(fft_all, axis=0)
+        else:
+            return freqs, fft_all[0]
 
     else:
-        seg = arr.copy()
         if use_windowing:
-            seg *= get_window(window_type, n)
-        fft_vals = np.abs(fft(seg))
+            signal_data *= get_window(window_type, n)
+
+        fft_vals = np.abs(fft(signal_data))
         freqs = np.fft.fftfreq(n, 1/fs)
-        return freqs[:n // 2], fft_vals[:n // 2]
+
+        return freqs[:n//2], fft_vals[:n//2]
+
 
 def compute_psd(signal_data):
-    nseg = min(nperseg, len(signal_data)) if len(signal_data) > 0 else nperseg
-    return welch(signal_data, fs=fs, nperseg=nseg)
+    return welch(signal_data, fs=fs, nperseg=nperseg)
+
 
 def detect_peaks(freqs, values):
     peaks, _ = find_peaks(values,
@@ -437,237 +358,144 @@ def detect_peaks(freqs, values):
                           prominence=peak_prominence)
     return peaks
 
-def plot_histograms(df, axes):
-    if len(axes) == 0:
-        st.info("No axis columns detected for histograms.")
-        return
-    cols_to_plot = axes[:3]
-    fig, ax = plt.subplots(1, len(cols_to_plot), figsize=(5 * len(cols_to_plot), 4))
-    if len(cols_to_plot) == 1:
-        ax = [ax]
-    for i, col in enumerate(cols_to_plot):
+
+def plot_histograms(df):
+    fig, ax = plt.subplots(1, 3, figsize=(15, 4))
+    for i, col in enumerate(["X (40g)", "Y (40g)", "Z (40g)"]):
         sns.histplot(df[col], bins=50, kde=True, ax=ax[i])
-        ax[i].set_title(str(col))
+        ax[i].set_title(col)
     st.pyplot(fig)
+
+
+def run_anomaly(df):
+    model = IsolationForest(contamination=contamination, random_state=42)
+    df["anomaly"] = model.fit_predict(df[["X (40g)", "Y (40g)", "Z (40g)"]])
+    return df
+
 
 # ================== MAIN ==================
 if uploaded_file:
+
+    # ---- Save file ----
     uploaded_file.seek(0)
     with tempfile.NamedTemporaryFile(delete=False, suffix=".ide") as tmp:
         tmp.write(uploaded_file.read())
         path = tmp.name
 
-    # Load doc
+    doc = endaq.ide.get_doc(path)
+
+    # ---- DEBUG (optional) ----
+    # st.write(endaq.ide.get_channel_table(doc))
+
+    # ================== LOAD CHANNEL 80 ==================
     try:
-        doc = endaq.ide.get_doc(path)
+        acc_df = endaq.ide.get_primary_sensor_data(
+            doc=doc.channels[80],
+            measurement_type="acceleration",
+            time_mode="datetime"
+        )
     except Exception as e:
-        st.error(f"Failed to load IDE document: {e}")
+        st.error(f"❌ Channel 80 not found: {e}")
         st.stop()
 
-    # Force channel index 80
-    acc_id = 80  # <-- your requested channel index
-    total_channels = len(doc.channels)
-    st.write("Available Channels")
-    st.write(f"Total channels detected: {total_channels}")
-
-    if acc_id < 0 or acc_id >= total_channels:
-        st.error(f"Requested channel index {acc_id} is out of range (0..{total_channels-1}).")
-        st.stop()
-
-    # Build a simple channel table for display & measurement lookup
-    raw_table = endaq.ide.get_channel_table(doc)
-    table = normalize_table(raw_table)
-
-    # Show a small preview
-    if not table.empty:
-        st.dataframe(table.head(20))
-    else:
-        st.warning("Channel table is empty or unreadable; will still try to load channel 80.")
-
-    # Try to infer measurement type from the table at index 80
-    meas_col = find_col(table, ["measurement", "type", "sensor", "quantity"])
-    measurement_hint = None
-    if (meas_col is not None) and (acc_id in table.index):
-        measurement_hint = str(table.loc[acc_id, meas_col]).lower()
-
-    if DEBUG:
-        st.write("🔎 Debug: measurement_hint for channel 80 =", measurement_hint)
-
-    # Load data for channel 80 with a robust approach:
-    # Try acceleration first if hinted, else try generic loading.
-    acc_df = None
-    load_errors = []
-
-    # Attempt 1: If hint suggests acceleration, try with measurement_type="acceleration"
+    # ---- Optional temperature ----
     try:
-        if measurement_hint and any(k in measurement_hint for k in ["acc", "accel", "acceleration", "g"]):
-            acc_df = endaq.ide.get_primary_sensor_data(
-                doc=doc.channels[acc_id],
-                measurement_type="acceleration",
-                time_mode="datetime"
-            )
-    except Exception as e:
-        load_errors.append(f"Acceleration load attempt failed: {e}")
+        temp_df = endaq.ide.get_primary_sensor_data(
+            doc=doc.channels[59],
+            measurement_type="temperature",
+            time_mode="datetime"
+        )
 
-    # Attempt 2: If not loaded yet, try temperature (in case this channel is a temp sensor)
-    if acc_df is None:
-        try:
-            if measurement_hint and any(k in measurement_hint for k in ["temp", "temperature", "therm"]):
-                acc_df = endaq.ide.get_primary_sensor_data(
-                    doc=doc.channels[acc_id],
-                    measurement_type="temperature",
-                    time_mode="datetime"
-                )
-        except Exception as e:
-            load_errors.append(f"Temperature load attempt failed: {e}")
+        temp_resampled = temp_df.reindex(acc_df.index, method='nearest')
+        df = acc_df.copy()
+        df["Temperature"] = temp_resampled.iloc[:, 0]
 
-    # Attempt 3: Try generic primary sensor data without specifying measurement_type
-    if acc_df is None:
-        try:
-            # Some endaq versions allow calling without measurement_type if the channel has a primary type
-            acc_df = endaq.ide.get_primary_sensor_data(
-                doc=doc.channels[acc_id],
-                time_mode="datetime"
-            )
-        except Exception as e:
-            load_errors.append(f"Generic primary sensor load attempt failed: {e}")
+    except:
+        st.warning("⚠️ No temperature channel found")
+        df = acc_df.copy()
 
-    # Attempt 4: As a final fallback, try get_channel_data if available
-    if acc_df is None:
-        try:
-            # If your installed endaq version has get_channel_data, uncomment the next lines:
-            # acc_df = endaq.ide.get_channel_data(
-            #     doc.channels[acc_id],
-            #     time_mode="datetime"
-            # )
-            pass
-        except Exception as e:
-            load_errors.append(f"get_channel_data attempt failed: {e}")
+    # ---- Select data ----
+    df = df.iloc[start_idx:end_idx]
 
-    if acc_df is None or acc_df.empty:
-        st.error(f"Failed to load data for channel {acc_id}. " +
-                 (" | ".join(load_errors) if load_errors else "No detail available."))
-        st.stop()
-
-    # Work on a copy
-    df = acc_df.copy()
-
-    # Slice
-    end_idx_safe = min(end_idx, len(df))
-    start_idx_safe = min(start_idx, end_idx_safe)
-    df = df.iloc[start_idx_safe:end_idx_safe]
-
-    # Resample if datetime index
     if resample_rate != "None":
-        if isinstance(df.index, pd.DatetimeIndex):
-            try:
-                df = df.resample(resample_rate).mean()
-            except Exception as e:
-                st.warning(f"Resampling failed: {e}")
-        else:
-            st.warning("Resampling requires a DatetimeIndex; skipping resample.")
-
-    # Detect axis columns (or fallback to numeric columns)
-    axes = detect_acc_axes(df)
-    if DEBUG:
-        st.write("🔎 Debug: Detected axes:", axes)
-
-    if len(axes) == 0:
-        st.warning("No numeric axis columns detected. Showing numeric columns preview.")
-        st.dataframe(df.select_dtypes(include=[np.number]).head())
+        df = df.resample(resample_rate).mean()
 
     # ================== TABS ==================
     tab1, tab2, tab3, tab4 = st.tabs(["Time", "Stats", "FFT/PSD", "Anomaly"])
 
     # -------- TIME --------
     with tab1:
-        if len(axes) == 0:
-            st.info("No axis columns detected to plot.")
-        else:
-            filt = df.copy()
-            for c in axes:
-                filt[c] = filt[c].rolling(ma_window, min_periods=1).mean()
+        filt = df.copy()
+        for c in ["X (40g)", "Y (40g)", "Z (40g)"]:
+            filt[c] = filt[c].rolling(ma_window, min_periods=1).mean()
 
-            fig = go.Figure()
-            for c in axes:
-                fig.add_trace(go.Scatter(x=df.index, y=df[c], name=f"{c} Raw"))
-                fig.add_trace(go.Scatter(x=filt.index, y=filt[c], name=f"{c} MA"))
+        fig = go.Figure()
+        for c in ["X (40g)", "Y (40g)", "Z (40g)"]:
+            fig.add_trace(go.Scatter(x=df.index, y=df[c], name=f"{c} Raw"))
+            fig.add_trace(go.Scatter(x=filt.index, y=filt[c], name=f"{c} MA"))
 
-            fig.update_layout(title=f"Channel {acc_id} — Raw vs Moving Average",
-                              xaxis_title="Time", yaxis_title="Value")
-            st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True)
 
     # -------- STATS --------
     with tab2:
-        st.subheader("Descriptive Statistics")
-        st.dataframe(df.select_dtypes(include=[np.number]).describe())
-
+        st.dataframe(df.describe())
         st.subheader("Histograms")
-        plot_histograms(df, axes)
+        plot_histograms(df)
 
     # -------- FFT + PSD --------
     with tab3:
-        if len(axes) == 0:
-            st.info("No axis columns detected to compute FFT/PSD.")
-        else:
-            # FFT + peak detection
-            fig = go.Figure()
-            peak_table = []
+        fig = go.Figure()
+        peak_table = []
 
-            for c in axes:
-                f, vals = apply_fft_advanced(df[c].values)
-                mask = (f >= fmin) & (f <= fmax)
-                f_sel, vals_sel = f[mask], vals[mask]
-                peaks = detect_peaks(f_sel, vals_sel)
+        for c in ["X (40g)", "Y (40g)", "Z (40g)"]:
+            f, vals = apply_fft(df[c].values)
+            mask = (f >= fmin) & (f <= fmax)
 
-                fig.add_trace(go.Scatter(x=f_sel, y=vals_sel, name=str(c)))
-                fig.add_trace(go.Scatter(x=f_sel[peaks], y=vals_sel[peaks],
-                                         mode="markers", marker=dict(color="red"),
-                                         name=f"{c} Peaks"))
+            f, vals = f[mask], vals[mask]
+            peaks = detect_peaks(f, vals)
 
-                for p in peaks:
-                    peak_table.append({"Axis": str(c), "Freq": float(f_sel[p]), "Mag": float(vals_sel[p])})
+            fig.add_trace(go.Scatter(x=f, y=vals, name=c))
+            fig.add_trace(go.Scatter(x=f[peaks], y=vals[peaks],
+                                     mode="markers",
+                                     marker=dict(color="red"),
+                                     name=f"{c} Peaks"))
 
-            fig.update_layout(title=f"Channel {acc_id} — FFT Spectrum with Peaks",
-                              xaxis_title="Frequency (Hz)", yaxis_title="Magnitude")
-            st.plotly_chart(fig, use_container_width=True)
+            for p in peaks:
+                peak_table.append({"Axis": c, "Freq": f[p], "Mag": vals[p]})
 
-            st.dataframe(pd.DataFrame(peak_table))
+        st.plotly_chart(fig, use_container_width=True)
+        st.dataframe(pd.DataFrame(peak_table))
 
-            # PSD (log y-axis)
-            fig2 = go.Figure()
-            for c in axes:
-                f_psd, Pxx = compute_psd(df[c].values)
-                mask = (f_psd >= fmin) & (f_psd <= fmax)
-                fig2.add_trace(go.Scatter(x=f_psd[mask], y=Pxx[mask], name=str(c)))
+        # PSD
+        fig2 = go.Figure()
+        for c in ["X (40g)", "Y (40g)", "Z (40g)"]:
+            f, Pxx = compute_psd(df[c].values)
+            mask = (f >= fmin) & (f <= fmax)
 
-            fig2.update_layout(title=f"Channel {acc_id} — Power Spectral Density (Welch)",
-                               xaxis_title="Frequency (Hz)", yaxis_title="PSD", yaxis_type="log")
-            st.plotly_chart(fig2, use_container_width=True)
+            fig2.add_trace(go.Scatter(x=f[mask], y=Pxx[mask], name=c))
+
+        fig2.update_layout(yaxis_type="log")
+        st.plotly_chart(fig2, use_container_width=True)
 
     # -------- ANOMALY --------
     with tab4:
-        if len(axes) == 0:
-            st.info("No axis columns detected to run anomaly detection.")
-        else:
-            model = IsolationForest(contamination=float(contamination), random_state=42)
-            X = df[axes].select_dtypes(include=[np.number])
-            df_an = df.copy()
-            df_an["anomaly"] = model.fit_predict(X)
+        df_an = run_anomaly(df.copy())
 
-            fig = go.Figure()
-            first_axis = axes[0]
-            fig.add_trace(go.Scatter(x=df_an.index, y=df_an[first_axis], name=str(first_axis)))
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=df_an.index, y=df_an["X (40g)"], name="X"))
 
-            an = df_an[df_an["anomaly"] == -1]
-            fig.add_trace(go.Scatter(x=an.index, y=an[first_axis],
-                                     mode="markers", marker=dict(color="red"),
-                                     name="Anomaly"))
+        anomalies = df_an[df_an["anomaly"] == -1]
 
-            fig.update_layout(title=f"Channel {acc_id} — Anomaly Detection ({first_axis})",
-                              xaxis_title="Time", yaxis_title="Value")
-            st.plotly_chart(fig, use_container_width=True)
-            st.write("Anomalies:", int((df_an["anomaly"] == -1).sum()))
+        fig.add_trace(go.Scatter(
+            x=anomalies.index,
+            y=anomalies["X (40g)"],
+            mode="markers",
+            marker=dict(color="red"),
+            name="Anomaly"
+        ))
+
+        st.plotly_chart(fig, use_container_width=True)
+        st.write("Anomalies detected:", len(anomalies))
 
 else:
     st.info("Upload an IDE file to start")
