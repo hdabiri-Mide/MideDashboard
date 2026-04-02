@@ -240,9 +240,9 @@
 
 
 ############################################################# Rev 2
-# ================== STREAMLIT DASHBOARD (Robust) ==================
+# ================== STREAMLIT DASHBOARD (Channel 80) ==================
 # Author: Hamed Dabiri + M365 Copilot
-# Description: enDAQ SHM Dashboard with robust channel detection & defensive guards
+# Description: enDAQ SHM Dashboard forcing channel index 80
 
 # ================== IMPORTS ==================
 import streamlit as st
@@ -262,15 +262,14 @@ from pandas.api.types import is_numeric_dtype
 
 # ================== PAGE ==================
 st.set_page_config(layout="wide")
-st.title("📊 enDAQ SHM Dashboard")
+st.title("📊 enDAQ SHM Dashboard (Channel 80)")
 
-# Toggle this to True if you want to see debug outputs in the app
-DEBUG = False
+DEBUG = False  # set True to print diagnostics in the app
 
 # ================== SIDEBAR ==================
 st.sidebar.header("General Settings")
 
-start_idx = st.sidebar.slider("Start Index", 0, 200000, 50000)
+start_idx = st.sidebar.slider("Start Index", 0, 200000, 0)
 end_idx = st.sidebar.slider("End Index", 10000, 300000, 60000)
 
 ma_window = st.sidebar.slider("Moving Average Window", 1, 50, 5)
@@ -320,68 +319,35 @@ contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.01)
 # ================== FILE ==================
 uploaded_file = st.file_uploader("Upload IDE file", type=["ide"])
 
-# ================== FUNCTIONS ==================
-
-def detect_channels(doc):
-    """
-    Safely extract the channel table from an IDE document and identify
-    the first acceleration and temperature channels (by index).
-
-    Returns:
-        display_df (pd.DataFrame): Display-friendly table with Name/Measurement/Units.
-        acc_id (Any | None): Index of the first acceleration channel or None.
-        temp_id (Any | None): Index of the first temperature channel or None.
-    """
-    raw_table = endaq.ide.get_channel_table(doc)
-
-    if DEBUG:
-        st.write("🔎 Debug: type(raw_table) =", type(raw_table))
-        if isinstance(raw_table, (list, dict, pd.DataFrame)):
-            st.write("🔎 Debug: raw_table preview:", raw_table if not isinstance(raw_table, pd.DataFrame) else raw_table.head())
-        else:
-            st.write("🔎 Debug: raw_table string:", str(raw_table))
-
+# ================== HELPERS ==================
+def normalize_table(raw_table):
+    """Normalize any object returned by endaq.ide.get_channel_table into a DataFrame."""
     if raw_table is None:
-        st.warning("No channel table found in the file (endaq.ide.get_channel_table returned None).")
-        return pd.DataFrame(columns=["Name", "Measurement", "Units"]), None, None
+        return pd.DataFrame()
 
-    # --- Normalize raw_table to a DataFrame safely ---
     try:
         if isinstance(raw_table, pd.DataFrame):
             table = raw_table.copy()
-
         elif isinstance(raw_table, (list, tuple)):
             if len(raw_table) == 0:
                 table = pd.DataFrame()
             elif isinstance(raw_table[0], dict):
-                # List of dicts -> records
                 table = pd.DataFrame.from_records(raw_table)
             else:
-                # List of scalars -> put in a single column
                 table = pd.DataFrame({"value": raw_table})
-
         elif isinstance(raw_table, dict):
-            # Dict can be: {col: list} or {key: scalar}. Handle both.
-            values = list(raw_table.values())
-            if all(isinstance(v, (list, tuple, np.ndarray)) for v in values):
+            vals = list(raw_table.values())
+            if all(isinstance(v, (list, tuple, np.ndarray)) for v in vals):
                 table = pd.DataFrame(raw_table)
             else:
-                table = pd.DataFrame([raw_table])  # single row
-
+                table = pd.DataFrame([raw_table])
         else:
-            # Fallback: wrap unknown type into a single-row DataFrame
             table = pd.DataFrame([{"value": raw_table}])
-
     except Exception as e:
         st.error(f"Failed to create channel table: {e}")
-        return pd.DataFrame(columns=["Name", "Measurement", "Units"]), None, None
+        return pd.DataFrame()
 
-    # --- If still empty, inform the user and return gracefully ---
-    if table is None or table.empty:
-        st.warning("Channel table is empty or unreadable for this IDE file.")
-        return pd.DataFrame(columns=["Name", "Measurement", "Units"]), None, None
-
-    # --- Normalize column names (to strings and lowercase) ---
+    # normalize column names
     safe_cols = []
     for c in table.columns:
         try:
@@ -389,40 +355,42 @@ def detect_channels(doc):
         except Exception:
             safe_cols.append("unnamed")
     table.columns = safe_cols
+    return table
 
-    # --- Column finder (search by substring, case-insensitive) ---
-    def find_col(names):
-        for n in names:
-            n = str(n).lower()
-            for c in table.columns:
-                if n in c:
-                    return c
-        return None
+def find_col(table, names):
+    for n in names:
+        n = str(n).lower()
+        for c in table.columns:
+            if n in c:
+                return c
+    return None
 
-    name_col = find_col(["name", "channel", "identifier"])
-    meas_col = find_col(["measurement", "type", "sensor", "quantity"])
-    unit_col = find_col(["unit", "units", "uom"])
+def detect_acc_axes(df):
+    """Detect axis columns, prefer x/y/z numeric columns; fallback to first 3 numeric."""
+    cols = list(df.columns)
+    numeric_cols = [c for c in cols if is_numeric_dtype(df[c])]
+    xyz_accel = []
+    for c in numeric_cols:
+        name = str(c).lower()
+        has_xyz = re.search(r'\b(x|y|z)\b', name) is not None or any(k in name for k in [" x", " y", " z"])
+        has_acc = any(k in name for k in ["acc", "accel", "g"])
+        if has_xyz and has_acc:
+            xyz_accel.append(c)
 
-    # --- Build display table (defensive defaults) ---
-    display = pd.DataFrame(index=table.index)
-    display["Name"] = table[name_col] if (name_col and name_col in table.columns) else (table["value"] if "value" in table.columns else "Unknown")
-    display["Measurement"] = table[meas_col] if (meas_col and meas_col in table.columns) else "Unknown"
-    display["Units"] = table[unit_col] if (unit_col and unit_col in table.columns) else ""
+    if len(xyz_accel) < 3:
+        xyz_any = [c for c in numeric_cols if re.search(r'\b(x|y|z)\b', str(c), re.I)]
+        merged = []
+        for c in xyz_accel + xyz_any:
+            if c not in merged:
+                merged.append(c)
+        xyz_accel = merged
 
-    # --- Auto-detect acceleration and temperature channels ---
-    acc_id, temp_id = None, None
-    for idx in display.index:
-        meas = str(display.loc[idx, "Measurement"]).lower()
-        if acc_id is None and any(k in meas for k in ["acc", "accel", "acceleration", "g"]):
-            acc_id = idx
-        if temp_id is None and any(k in meas for k in ["temp", "temperature", "therm"]):
-            temp_id = idx
+    if len(xyz_accel) == 0:
+        xyz_accel = numeric_cols[:3]
 
-    return display, acc_id, temp_id
-
+    return xyz_accel[:3]
 
 def apply_fft_advanced(signal_data):
-    """FFT with optional windowing, averaging, and overlap. Avoids in-place modification."""
     arr = np.array(signal_data, dtype=float)  # copy
     n = len(arr)
 
@@ -440,7 +408,6 @@ def apply_fft_advanced(signal_data):
             fft_all.append(np.abs(fft(seg)[:window_size // 2]))
 
         if len(fft_all) == 0:
-            # Fallback: compute single FFT on entire signal
             seg = arr.copy()
             if use_windowing:
                 seg *= get_window(window_type, n)
@@ -459,12 +426,9 @@ def apply_fft_advanced(signal_data):
         freqs = np.fft.fftfreq(n, 1/fs)
         return freqs[:n // 2], fft_vals[:n // 2]
 
-
 def compute_psd(signal_data):
-    # Ensure nperseg does not exceed signal length to prevent warnings
     nseg = min(nperseg, len(signal_data)) if len(signal_data) > 0 else nperseg
     return welch(signal_data, fs=fs, nperseg=nseg)
-
 
 def detect_peaks(freqs, values):
     peaks, _ = find_peaks(values,
@@ -473,7 +437,6 @@ def detect_peaks(freqs, values):
                           prominence=peak_prominence)
     return peaks
 
-
 def plot_histograms(df, axes):
     if len(axes) == 0:
         st.info("No axis columns detected for histograms.")
@@ -481,160 +444,120 @@ def plot_histograms(df, axes):
     cols_to_plot = axes[:3]
     fig, ax = plt.subplots(1, len(cols_to_plot), figsize=(5 * len(cols_to_plot), 4))
     if len(cols_to_plot) == 1:
-        ax = [ax]  # make iterable
+        ax = [ax]
     for i, col in enumerate(cols_to_plot):
         sns.histplot(df[col], bins=50, kde=True, ax=ax[i])
         ax[i].set_title(str(col))
     st.pyplot(fig)
 
-
-def run_anomaly(df, axes):
-    if len(axes) == 0:
-        st.info("No axis columns detected for anomaly detection.")
-        df["anomaly"] = 1
-        return df
-    model = IsolationForest(contamination=float(contamination), random_state=42)
-    # Use only numeric axis columns
-    X = df[axes].select_dtypes(include=[np.number])
-    df["anomaly"] = model.fit_predict(X)
-    return df
-
-
-def detect_acc_axes(acc_df):
-    """
-    Try to detect the acceleration axes in the acc_df.
-    Preference: columns containing x/y/z and accel-related tokens, else first 3 numeric columns.
-    """
-    cols = list(acc_df.columns)
-    numeric_cols = [c for c in cols if is_numeric_dtype(acc_df[c])]
-    # Prioritize columns with x/y/z and something like accel/g in the name
-    xyz_accel = []
-    for c in numeric_cols:
-        name = str(c).lower()
-        has_xyz = re.search(r'\b(x|y|z)\b', name) is not None or any(k in name for k in [" x", " y", " z"])
-        has_acc = any(k in name for k in ["acc", "accel", "g"])
-        if has_xyz and has_acc:
-            xyz_accel.append(c)
-
-    # If that's too strict, fall back to any x/y/z
-    if len(xyz_accel) < 3:
-        xyz_any = [c for c in numeric_cols if re.search(r'\b(x|y|z)\b', str(c), re.I)]
-        # Merge uniques, keep order
-        merged = []
-        for c in xyz_accel + xyz_any:
-            if c not in merged:
-                merged.append(c)
-        xyz_accel = merged
-
-    # Final fallback: first 3 numeric columns
-    if len(xyz_accel) == 0:
-        xyz_accel = numeric_cols[:3]
-
-    return xyz_accel[:3]
-
-
 # ================== MAIN ==================
 if uploaded_file:
-
-    # ---- Load file ----
     uploaded_file.seek(0)
     with tempfile.NamedTemporaryFile(delete=False, suffix=".ide") as tmp:
         tmp.write(uploaded_file.read())
         path = tmp.name
 
-    # Load the IDE document
+    # Load doc
     try:
         doc = endaq.ide.get_doc(path)
     except Exception as e:
         st.error(f"Failed to load IDE document: {e}")
         st.stop()
 
-    # ---- Channel detection ----
-    table, auto_acc, auto_temp = detect_channels(doc)
+    # Force channel index 80
+    acc_id = 80  # <-- your requested channel index
+    total_channels = len(doc.channels)
+    st.write("Available Channels")
+    st.write(f"Total channels detected: {total_channels}")
 
-    st.subheader("Available Channels")
-    st.dataframe(table)
-
-    if table.empty:
-        st.error("No channels detected in this file. Please verify the IDE file contains sensor channels.")
+    if acc_id < 0 or acc_id >= total_channels:
+        st.error(f"Requested channel index {acc_id} is out of range (0..{total_channels-1}).")
         st.stop()
 
-    channel_ids = list(table.index)
+    # Build a simple channel table for display & measurement lookup
+    raw_table = endaq.ide.get_channel_table(doc)
+    table = normalize_table(raw_table)
 
-    if len(channel_ids) == 0:
-        st.error("No channels available for selection.")
-        st.stop()
+    # Show a small preview
+    if not table.empty:
+        st.dataframe(table.head(20))
+    else:
+        st.warning("Channel table is empty or unreadable; will still try to load channel 80.")
 
-    def format_label(idx):
-        row = table.loc[idx]
-        # Use safe access to avoid KeyErrors
-        name = row.get("Name", "Unknown")
-        meas = row.get("Measurement", "Unknown")
-        units = row.get("Units", "")
-        return f"{idx} | {name} | {meas} ({units})"
+    # Try to infer measurement type from the table at index 80
+    meas_col = find_col(table, ["measurement", "type", "sensor", "quantity"])
+    measurement_hint = None
+    if (meas_col is not None) and (acc_id in table.index):
+        measurement_hint = str(table.loc[acc_id, meas_col]).lower()
 
-    st.sidebar.subheader("Channel Selection")
+    if DEBUG:
+        st.write("🔎 Debug: measurement_hint for channel 80 =", measurement_hint)
 
-    # Default to auto-detected or first
-    acc_default_idx = channel_ids.index(auto_acc) if (auto_acc in channel_ids) else 0
-    temp_default_idx = channel_ids.index(auto_temp) if (auto_temp in channel_ids) else 0
+    # Load data for channel 80 with a robust approach:
+    # Try acceleration first if hinted, else try generic loading.
+    acc_df = None
+    load_errors = []
 
-    acc_id = st.sidebar.selectbox(
-        "Acceleration Channel",
-        options=channel_ids,
-        format_func=format_label,
-        index=acc_default_idx
-    )
-
-    temp_id = st.sidebar.selectbox(
-        "Temperature Channel",
-        options=channel_ids,
-        format_func=format_label,
-        index=temp_default_idx
-    )
-
-    # ---- Load acceleration and temperature data ----
+    # Attempt 1: If hint suggests acceleration, try with measurement_type="acceleration"
     try:
-        acc_df = endaq.ide.get_primary_sensor_data(
-            doc=doc.channels[acc_id],
-            measurement_type="acceleration",
-            time_mode="datetime"
-        )
+        if measurement_hint and any(k in measurement_hint for k in ["acc", "accel", "acceleration", "g"]):
+            acc_df = endaq.ide.get_primary_sensor_data(
+                doc=doc.channels[acc_id],
+                measurement_type="acceleration",
+                time_mode="datetime"
+            )
     except Exception as e:
-        st.error(f"Failed to load acceleration data: {e}")
-        st.stop()
+        load_errors.append(f"Acceleration load attempt failed: {e}")
 
-    # Temperature is optional
-    try:
-        temp_df = endaq.ide.get_primary_sensor_data(
-            doc=doc.channels[temp_id],
-            measurement_type="temperature",
-            time_mode="datetime"
-        )
-    except Exception:
-        temp_df = None
+    # Attempt 2: If not loaded yet, try temperature (in case this channel is a temp sensor)
+    if acc_df is None:
+        try:
+            if measurement_hint and any(k in measurement_hint for k in ["temp", "temperature", "therm"]):
+                acc_df = endaq.ide.get_primary_sensor_data(
+                    doc=doc.channels[acc_id],
+                    measurement_type="temperature",
+                    time_mode="datetime"
+                )
+        except Exception as e:
+            load_errors.append(f"Temperature load attempt failed: {e}")
+
+    # Attempt 3: Try generic primary sensor data without specifying measurement_type
+    if acc_df is None:
+        try:
+            # Some endaq versions allow calling without measurement_type if the channel has a primary type
+            acc_df = endaq.ide.get_primary_sensor_data(
+                doc=doc.channels[acc_id],
+                time_mode="datetime"
+            )
+        except Exception as e:
+            load_errors.append(f"Generic primary sensor load attempt failed: {e}")
+
+    # Attempt 4: As a final fallback, try get_channel_data if available
+    if acc_df is None:
+        try:
+            # If your installed endaq version has get_channel_data, uncomment the next lines:
+            # acc_df = endaq.ide.get_channel_data(
+            #     doc.channels[acc_id],
+            #     time_mode="datetime"
+            # )
+            pass
+        except Exception as e:
+            load_errors.append(f"get_channel_data attempt failed: {e}")
+
+    if acc_df is None or acc_df.empty:
+        st.error(f"Failed to load data for channel {acc_id}. " +
+                 (" | ".join(load_errors) if load_errors else "No detail available."))
+        st.stop()
 
     # Work on a copy
     df = acc_df.copy()
 
-    # If temperature available, align to acceleration timestamps
-    if temp_df is not None and not temp_df.empty:
-        # Take first column as temperature value
-        try:
-            # Reindex temperature to acc timestamps using nearest matching
-            temp_resampled = temp_df.iloc[:, 0].reindex(df.index, method='nearest')
-            df["Temperature"] = temp_resampled
-        except Exception as e:
-            if DEBUG:
-                st.write("🔎 Debug: Temperature alignment failed:", e)
-
-    # ---- Select slice ----
-    # Guard end_idx being larger than len(df)
+    # Slice
     end_idx_safe = min(end_idx, len(df))
     start_idx_safe = min(start_idx, end_idx_safe)
     df = df.iloc[start_idx_safe:end_idx_safe]
 
-    # Resample if requested and index is datetime
+    # Resample if datetime index
     if resample_rate != "None":
         if isinstance(df.index, pd.DatetimeIndex):
             try:
@@ -642,16 +565,16 @@ if uploaded_file:
             except Exception as e:
                 st.warning(f"Resampling failed: {e}")
         else:
-            st.warning("Resampling requires a DatetimeIndex; skipping resample for this dataset.")
+            st.warning("Resampling requires a DatetimeIndex; skipping resample.")
 
-    # Detect acceleration axes dynamically
+    # Detect axis columns (or fallback to numeric columns)
     axes = detect_acc_axes(df)
     if DEBUG:
         st.write("🔎 Debug: Detected axes:", axes)
 
-    # Let the user know if axes are limited
-    if len(axes) < 3:
-        st.warning(f"Detected acceleration axes: {axes}. Some plots may be incomplete.")
+    if len(axes) == 0:
+        st.warning("No numeric axis columns detected. Showing numeric columns preview.")
+        st.dataframe(df.select_dtypes(include=[np.number]).head())
 
     # ================== TABS ==================
     tab1, tab2, tab3, tab4 = st.tabs(["Time", "Stats", "FFT/PSD", "Anomaly"])
@@ -659,7 +582,7 @@ if uploaded_file:
     # -------- TIME --------
     with tab1:
         if len(axes) == 0:
-            st.info("No acceleration axes detected to plot.")
+            st.info("No axis columns detected to plot.")
         else:
             filt = df.copy()
             for c in axes:
@@ -670,12 +593,13 @@ if uploaded_file:
                 fig.add_trace(go.Scatter(x=df.index, y=df[c], name=f"{c} Raw"))
                 fig.add_trace(go.Scatter(x=filt.index, y=filt[c], name=f"{c} MA"))
 
-            fig.update_layout(title="Acceleration (Raw vs Moving Average)", xaxis_title="Time", yaxis_title="Value")
+            fig.update_layout(title=f"Channel {acc_id} — Raw vs Moving Average",
+                              xaxis_title="Time", yaxis_title="Value")
             st.plotly_chart(fig, use_container_width=True)
 
     # -------- STATS --------
     with tab2:
-        # Describe only numeric columns
+        st.subheader("Descriptive Statistics")
         st.dataframe(df.select_dtypes(include=[np.number]).describe())
 
         st.subheader("Histograms")
@@ -684,7 +608,7 @@ if uploaded_file:
     # -------- FFT + PSD --------
     with tab3:
         if len(axes) == 0:
-            st.info("No acceleration axes detected to compute FFT/PSD.")
+            st.info("No axis columns detected to compute FFT/PSD.")
         else:
             # FFT + peak detection
             fig = go.Figure()
@@ -704,7 +628,8 @@ if uploaded_file:
                 for p in peaks:
                     peak_table.append({"Axis": str(c), "Freq": float(f_sel[p]), "Mag": float(vals_sel[p])})
 
-            fig.update_layout(title="FFT Spectrum with Peaks", xaxis_title="Frequency (Hz)", yaxis_title="Magnitude")
+            fig.update_layout(title=f"Channel {acc_id} — FFT Spectrum with Peaks",
+                              xaxis_title="Frequency (Hz)", yaxis_title="Magnitude")
             st.plotly_chart(fig, use_container_width=True)
 
             st.dataframe(pd.DataFrame(peak_table))
@@ -716,16 +641,21 @@ if uploaded_file:
                 mask = (f_psd >= fmin) & (f_psd <= fmax)
                 fig2.add_trace(go.Scatter(x=f_psd[mask], y=Pxx[mask], name=str(c)))
 
-            fig2.update_layout(title="Power Spectral Density (Welch)", xaxis_title="Frequency (Hz)", yaxis_title="PSD", yaxis_type="log")
+            fig2.update_layout(title=f"Channel {acc_id} — Power Spectral Density (Welch)",
+                               xaxis_title="Frequency (Hz)", yaxis_title="PSD", yaxis_type="log")
             st.plotly_chart(fig2, use_container_width=True)
 
     # -------- ANOMALY --------
     with tab4:
-        df_an = run_anomaly(df.copy(), axes)
+        if len(axes) == 0:
+            st.info("No axis columns detected to run anomaly detection.")
+        else:
+            model = IsolationForest(contamination=float(contamination), random_state=42)
+            X = df[axes].select_dtypes(include=[np.number])
+            df_an = df.copy()
+            df_an["anomaly"] = model.fit_predict(X)
 
-        fig = go.Figure()
-        # Plot first axis if available
-        if len(axes) > 0:
+            fig = go.Figure()
             first_axis = axes[0]
             fig.add_trace(go.Scatter(x=df_an.index, y=df_an[first_axis], name=str(first_axis)))
 
@@ -734,11 +664,13 @@ if uploaded_file:
                                      mode="markers", marker=dict(color="red"),
                                      name="Anomaly"))
 
-            fig.update_layout(title=f"Anomaly Detection ({first_axis})", xaxis_title="Time", yaxis_title="Value")
+            fig.update_layout(title=f"Channel {acc_id} — Anomaly Detection ({first_axis})",
+                              xaxis_title="Time", yaxis_title="Value")
             st.plotly_chart(fig, use_container_width=True)
             st.write("Anomalies:", int((df_an["anomaly"] == -1).sum()))
-        else:
-            st.info("No acceleration axes detected to run anomaly detection.")
+
+else:
+    st.info("Upload an IDE file to start")
 
 else:
     st.info("Upload an IDE file to start")
