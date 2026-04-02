@@ -671,6 +671,3 @@ if uploaded_file:
 
 else:
     st.info("Upload an IDE file to start")
-
-else:
-    st.info("Upload an IDE file to start")
