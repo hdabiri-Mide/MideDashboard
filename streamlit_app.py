@@ -380,13 +380,13 @@ if uploaded_file:
     duration_sec = len(df_full) / fs_auto
     st.sidebar.write(f"Total duration: {duration_sec:.2f} s")
 
-    max_window = min(60.0, duration_sec)
-    st.sidebar.markdown("**Enter start and end seconds (max window = 60 sec)**")
+    max_window = min(40.0, duration_sec)
+    st.sidebar.markdown("**Enter start and end seconds (max window = 40 sec)**")
     start_time = st.sidebar.number_input("Start Time (s)", min_value=0.0, max_value=duration_sec, value=0.0)
-    end_time = st.sidebar.number_input("End Time (s)", min_value=0.0, max_value=duration_sec, value=min(60.0, duration_sec))
-    if end_time - start_time > 60:
-        end_time = start_time + 60
-        st.sidebar.warning("⚠️ Maximum window = 60 sec, adjusted automatically")
+    end_time = st.sidebar.number_input("End Time (s)", min_value=0.0, max_value=duration_sec, value=min(40.0, duration_sec))
+    if end_time - start_time > 40:
+        end_time = start_time + 40
+        st.sidebar.warning("⚠️ Maximum window = 40 sec, adjusted automatically")
     st.sidebar.write(f"Selected window: {end_time - start_time:.2f} sec")
     start_idx = int(start_time * fs_auto)
     end_idx = int(end_time * fs_auto)
