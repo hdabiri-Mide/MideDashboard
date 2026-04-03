@@ -1,3 +1,4 @@
+################################# Rev 1
 # # ================== IMPORTS ==================
 # import streamlit as st
 # import numpy as np
@@ -17,39 +18,30 @@
 # st.title("📊 enDAQ SHM Dashboard (Channel 80)")
 
 # # ================== SIDEBAR ==================
+# st.sidebar.header("General Settings")
 
-# st.sidebar.header("Sampling Frequency")
-# fs_auto_placeholder = st.sidebar.empty()
-# use_manual_fs = st.sidebar.checkbox("Use Manual fs", False)
-# manual_fs = st.sidebar.number_input("Manual fs (Hz)", value=0.0)
-
-# st.sidebar.header("Time Selection")
-# time_slider_placeholder = st.sidebar.empty()  # placeholder for single slider
-
-# st.sidebar.header("Resampling")
-# resample_ratio = st.sidebar.slider(
-#     "Resample Ratio (target fs / current fs)",
-#     0.1, 2.0, 1.0, step=0.1
-# )
-
+# # Moving average
 # ma_window = st.sidebar.slider("Moving Average Window", 1, 50, 5)
 
-# # FFT
+# # Resample ratio
+# resample_ratio = st.sidebar.number_input("Resample Ratio (target fs / current fs)", value=1.0, min_value=0.0)
+
+# # Optional override
+# override_fs = st.sidebar.checkbox("Override Sampling Frequency", False)
+# manual_fs = st.sidebar.number_input("Manual fs (Hz)", value=4000.0)
+
+# # -------- FFT SETTINGS --------
 # st.sidebar.header("FFT Settings")
 # use_windowing = st.sidebar.checkbox("Windowing", False)
 # use_averaging = st.sidebar.checkbox("Averaging", False)
 # use_overlap = st.sidebar.checkbox("Overlap", False)
-
 # window_type = "hann"
 # window_size = 1024
 # overlap_factor = 0.5
-
 # if use_windowing:
 #     window_type = st.sidebar.selectbox("Window Type", ["hann", "hamming", "blackman", "bartlett"])
-
 # if use_averaging or use_overlap:
 #     window_size = st.sidebar.slider("Window Size", 128, 4096, 1024)
-
 # if use_overlap:
 #     overlap_factor = st.sidebar.slider("Overlap Factor", 0.1, 0.9, 0.5)
 
@@ -58,17 +50,17 @@
 # fmin = st.sidebar.number_input("Min Frequency", value=0.0)
 # fmax = st.sidebar.number_input("Max Frequency", value=2000.0)
 
-# # Peaks
+# # -------- PEAK DETECTION --------
 # st.sidebar.header("Peak Detection")
 # peak_height = st.sidebar.number_input("Min Height", value=0.0)
 # peak_distance = st.sidebar.slider("Min Distance", 1, 200, 20)
 # peak_prominence = st.sidebar.number_input("Prominence", value=0.0)
 
-# # PSD
+# # -------- PSD --------
 # st.sidebar.subheader("PSD")
 # nperseg = st.sidebar.slider("nperseg", 128, 4096, 1024)
 
-# # Anomaly
+# # -------- ANOMALY --------
 # st.sidebar.subheader("Anomaly Detection")
 # contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.01)
 
@@ -76,7 +68,6 @@
 # uploaded_file = st.file_uploader("Upload IDE file", type=["ide"])
 
 # # ================== FUNCTIONS ==================
-
 # def estimate_fs(time_index):
 #     dt = np.diff(time_index.astype('int64') / 1e9)
 #     dt = dt[dt > 0]
@@ -135,15 +126,13 @@
 
 # # ================== MAIN ==================
 # if uploaded_file:
-
 #     uploaded_file.seek(0)
 #     with tempfile.NamedTemporaryFile(delete=False, suffix=".ide") as tmp:
 #         tmp.write(uploaded_file.read())
 #         path = tmp.name
-
 #     doc = endaq.ide.get_doc(path)
 
-#     # ---- Load data ----
+#     # ---- Load channel 80 ----
 #     try:
 #         acc_df = endaq.ide.get_primary_sensor_data(
 #             doc=doc.channels[80],
@@ -155,62 +144,45 @@
 #         st.error(f"❌ Channel 80 not found: {e}")
 #         st.stop()
 
-#     df = acc_df.copy()
-
-#     # ---- Estimate fs ----
-#     fs_auto, irregular = estimate_fs(df.index)
+#     df_full = acc_df.copy()
+#     fs_auto, irregular = estimate_fs(df_full.index)
 #     if fs_auto is None:
 #         st.error("❌ Could not estimate sampling frequency")
 #         st.stop()
 
-#     # ---- Duration ----
-#     n_samples = len(df)
-#     duration_sec = n_samples / fs_auto
-#     st.sidebar.write(f"⏱️ Duration: {duration_sec:.2f} seconds")
+#     if irregular:
+#         st.warning("⚠️ Irregular sampling detected → resampling to uniform grid")
+#         dt = 1 / fs_auto
+#         freq_str = f"{int(dt*1000)}L"  # milliseconds
+#         df_full = df_full.resample(freq_str).mean().interpolate()
+#         fs_auto = 1.0 / dt
 
-#     # ---- Time range slider (single UI) ----
-#     time_range = time_slider_placeholder.slider(
+#     # Apply optional manual fs
+#     fs = manual_fs if override_fs else fs_auto
+#     st.sidebar.write(f"📌 Auto fs: {fs_auto:.2f} Hz")
+#     if override_fs:
+#         st.sidebar.write(f"⚠️ Using manual fs: {fs:.2f} Hz")
+
+#     # ---- Time range slider ----
+#     duration_sec = len(df_full) / fs
+#     max_window_sec = min(10.0, duration_sec)  # default 10 sec window
+#     time_range = st.sidebar.slider(
 #         "Time Range (s)",
 #         0.0,
 #         duration_sec,
-#         (0.0, duration_sec)
+#         (0.0, max_window_sec)
 #     )
 #     start_time, end_time = time_range
 #     st.sidebar.write(f"Selected window: {end_time - start_time:.2f} sec")
 
-#     # ---- Manual fs default ----
-#     if manual_fs == 0.0:
-#         manual_fs = fs_auto
-#     fs_auto_placeholder.write(f"📌 Auto fs: {fs_auto:.2f} Hz")
+#     start_idx = int(start_time * fs)
+#     end_idx = int(end_time * fs)
+#     df = df_full.iloc[start_idx:end_idx]
 
-#     # ---- Handle irregular sampling ----
-#     if irregular:
-#         st.warning("⚠️ Irregular sampling → resampling")
-#         dt = 1 / fs_auto
-#         freq_str = f"{int(dt*1000)}L"
-#         df = df.resample(freq_str).mean().interpolate()
-
-#     # ---- Time slicing ----
-#     start_idx = int(start_time * fs_auto)
-#     end_idx = int(end_time * fs_auto)
-#     start_idx = max(0, min(start_idx, n_samples - 1))
-#     end_idx = max(start_idx + 1, min(end_idx, n_samples))
-#     df = df.iloc[start_idx:end_idx]
-
-#     # ---- Ratio resampling ----
+#     # ---- Optional resample ratio ----
 #     if resample_ratio != 1.0:
-#         target_fs = fs_auto * resample_ratio
-#         dt_new = 1 / target_fs
-#         freq_str = f"{int(dt_new * 1000)}L"
-#         df = df.resample(freq_str).mean().interpolate()
-#         fs_auto = target_fs
-
-#     # ---- Final fs ----
-#     fs = manual_fs if use_manual_fs else fs_auto
-#     if use_manual_fs:
-#         st.sidebar.warning(f"Using Manual fs: {fs:.2f} Hz")
-#     else:
-#         st.sidebar.success(f"Using Auto fs: {fs:.2f} Hz")
+#         df = df.resample(f"{1/fs/resample_ratio}S").mean()
+#         fs = fs * resample_ratio
 
 #     # ================== TABS ==================
 #     tab1, tab2, tab3, tab4 = st.tabs(["Time", "Stats", "FFT/PSD", "Anomaly"])
@@ -220,7 +192,6 @@
 #         filt = df.copy()
 #         for c in ["X (40g)", "Y (40g)", "Z (40g)"]:
 #             filt[c] = filt[c].rolling(ma_window, min_periods=1).mean()
-
 #         fig = go.Figure()
 #         for c in ["X (40g)", "Y (40g)", "Z (40g)"]:
 #             fig.add_trace(go.Scatter(x=df.index, y=df[c], name=f"{c} Raw"))
@@ -252,6 +223,7 @@
 #         st.plotly_chart(fig, use_container_width=True)
 #         st.dataframe(pd.DataFrame(peak_table))
 
+#         # PSD
 #         fig2 = go.Figure()
 #         for c in ["X (40g)", "Y (40g)", "Z (40g)"]:
 #             f, Pxx = compute_psd(df[c].values, fs)
@@ -278,7 +250,6 @@
 
 # else:
 #     st.info("Upload an IDE file to start")
-
 ################################# Rev 2
 # ================== IMPORTS ==================
 import streamlit as st
@@ -297,53 +268,6 @@ from sklearn.ensemble import IsolationForest
 # ================== PAGE ==================
 st.set_page_config(layout="wide")
 st.title("📊 enDAQ SHM Dashboard (Channel 80)")
-
-# ================== SIDEBAR ==================
-st.sidebar.header("General Settings")
-
-# Moving average
-ma_window = st.sidebar.slider("Moving Average Window", 1, 50, 5)
-
-# Resample ratio
-resample_ratio = st.sidebar.number_input("Resample Ratio (target fs / current fs)", value=1.0, min_value=0.0)
-
-# Optional override
-override_fs = st.sidebar.checkbox("Override Sampling Frequency", False)
-manual_fs = st.sidebar.number_input("Manual fs (Hz)", value=4000.0)
-
-# -------- FFT SETTINGS --------
-st.sidebar.header("FFT Settings")
-use_windowing = st.sidebar.checkbox("Windowing", False)
-use_averaging = st.sidebar.checkbox("Averaging", False)
-use_overlap = st.sidebar.checkbox("Overlap", False)
-window_type = "hann"
-window_size = 1024
-overlap_factor = 0.5
-if use_windowing:
-    window_type = st.sidebar.selectbox("Window Type", ["hann", "hamming", "blackman", "bartlett"])
-if use_averaging or use_overlap:
-    window_size = st.sidebar.slider("Window Size", 128, 4096, 1024)
-if use_overlap:
-    overlap_factor = st.sidebar.slider("Overlap Factor", 0.1, 0.9, 0.5)
-
-# Frequency range
-st.sidebar.subheader("Frequency Range")
-fmin = st.sidebar.number_input("Min Frequency", value=0.0)
-fmax = st.sidebar.number_input("Max Frequency", value=2000.0)
-
-# -------- PEAK DETECTION --------
-st.sidebar.header("Peak Detection")
-peak_height = st.sidebar.number_input("Min Height", value=0.0)
-peak_distance = st.sidebar.slider("Min Distance", 1, 200, 20)
-peak_prominence = st.sidebar.number_input("Prominence", value=0.0)
-
-# -------- PSD --------
-st.sidebar.subheader("PSD")
-nperseg = st.sidebar.slider("nperseg", 128, 4096, 1024)
-
-# -------- ANOMALY --------
-st.sidebar.subheader("Anomaly Detection")
-contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.01)
 
 # ================== FILE ==================
 uploaded_file = st.file_uploader("Upload IDE file", type=["ide"])
@@ -438,27 +362,74 @@ if uploaded_file:
         df_full = df_full.resample(freq_str).mean().interpolate()
         fs_auto = 1.0 / dt
 
-    # Apply optional manual fs
-    fs = manual_fs if override_fs else fs_auto
+    # ---- Display auto fs at the top ----
     st.sidebar.write(f"📌 Auto fs: {fs_auto:.2f} Hz")
+
+    # ---- Optional override fs ----
+    override_fs = st.sidebar.checkbox("Override Sampling Frequency", False)
+    manual_fs = st.sidebar.number_input("Manual fs (Hz)", value=fs_auto)
+    fs = manual_fs if override_fs else fs_auto
     if override_fs:
         st.sidebar.write(f"⚠️ Using manual fs: {fs:.2f} Hz")
 
-    # ---- Time range slider ----
+    # ---- Time range selection (top of sidebar) ----
     duration_sec = len(df_full) / fs
-    max_window_sec = min(10.0, duration_sec)  # default 10 sec window
-    time_range = st.sidebar.slider(
+    max_window = min(60.0, duration_sec)
+    st.sidebar.markdown(f"**Select start/end seconds (max window = 60 sec)**")
+    start_time, end_time = st.sidebar.slider(
         "Time Range (s)",
         0.0,
         duration_sec,
-        (0.0, max_window_sec)
+        (0.0, min(60.0, duration_sec))
     )
-    start_time, end_time = time_range
+    # enforce max window = 60
+    if end_time - start_time > 60:
+        end_time = start_time + 60
+        st.sidebar.warning("⚠️ Maximum window = 60 sec, adjusted automatically")
     st.sidebar.write(f"Selected window: {end_time - start_time:.2f} sec")
 
     start_idx = int(start_time * fs)
     end_idx = int(end_time * fs)
     df = df_full.iloc[start_idx:end_idx]
+
+    # ================== SIDEBAR CONTROLS ==================
+    st.sidebar.header("General Settings")
+    ma_window = st.sidebar.slider("Moving Average Window", 1, 50, 5)
+    resample_ratio = st.sidebar.number_input("Resample Ratio (target fs / current fs)", value=1.0)
+
+    # -------- FFT SETTINGS --------
+    st.sidebar.header("FFT Settings")
+    use_windowing = st.sidebar.checkbox("Windowing", False)
+    use_averaging = st.sidebar.checkbox("Averaging", False)
+    use_overlap = st.sidebar.checkbox("Overlap", False)
+    window_type = "hann"
+    window_size = 1024
+    overlap_factor = 0.5
+    if use_windowing:
+        window_type = st.sidebar.selectbox("Window Type", ["hann", "hamming", "blackman", "bartlett"])
+    if use_averaging or use_overlap:
+        window_size = st.sidebar.slider("Window Size", 128, 4096, 1024)
+    if use_overlap:
+        overlap_factor = st.sidebar.slider("Overlap Factor", 0.1, 0.9, 0.5)
+
+    # Frequency range
+    st.sidebar.subheader("Frequency Range")
+    fmin = st.sidebar.number_input("Min Frequency", value=0.0)
+    fmax = st.sidebar.number_input("Max Frequency", value=2000.0)
+
+    # -------- PEAK DETECTION --------
+    st.sidebar.header("Peak Detection")
+    peak_height = st.sidebar.number_input("Min Height", value=0.0)
+    peak_distance = st.sidebar.slider("Min Distance", 1, 200, 20)
+    peak_prominence = st.sidebar.number_input("Prominence", value=0.0)
+
+    # -------- PSD --------
+    st.sidebar.subheader("PSD")
+    nperseg = st.sidebar.slider("nperseg", 128, 4096, 1024)
+
+    # -------- ANOMALY --------
+    st.sidebar.subheader("Anomaly Detection")
+    contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.01)
 
     # ---- Optional resample ratio ----
     if resample_ratio != 1.0:
