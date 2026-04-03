@@ -391,7 +391,7 @@ if uploaded_file:
     st.sidebar.header("🚨 Anomaly Detection")
 
     # model_choice = st.sidebar.selectbox("Model", ["Isolation Forest", "PCA", "KMeans"])
-    model_choice = st.sidebar.selectbox("Model", ["Isolation Forest", "PCA"])
+    model_choice = st.sidebar.selectbox("Model", ["Isolation Forest", "PCA"], index=1)
 
     # Dynamic hyperparameters
     if model_choice == "Isolation Forest":
