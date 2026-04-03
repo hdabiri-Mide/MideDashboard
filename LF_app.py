@@ -278,7 +278,6 @@
 # else:
 #     st.info("Upload file to start")
 # ################################# Rev 2
-
 # ================== IMPORTS ==================
 import streamlit as st
 import numpy as np
@@ -346,11 +345,9 @@ def apply_fft(signal_data, fs):
 def compute_psd(signal_data, fs):
     return welch(signal_data, fs=fs, nperseg=nperseg)
 
-def detect_peaks(freqs, values):
-    peaks, _ = find_peaks(values,
-                          height=peak_height,
-                          distance=peak_distance,
-                          prominence=peak_prominence)
+# Updated detect_peaks function
+def detect_peaks(freqs, values, height=0.0, distance=20, prominence=0.0):
+    peaks, _ = find_peaks(values, height=height, distance=distance, prominence=prominence)
     return peaks
 
 def plot_histograms(df):
@@ -468,6 +465,9 @@ if uploaded_file:
         overlap_factor = st.sidebar.slider("Overlap", 0.1, 0.9, 0.5)
     fmin = st.sidebar.number_input("Min Freq", value=0.0)
     fmax = st.sidebar.number_input("Max Freq", value=50.0)
+    peak_height = st.sidebar.number_input("Peak Height", value=0.0)
+    peak_distance = st.sidebar.slider("Peak Distance", 1, 200, 20)
+    peak_prominence = st.sidebar.number_input("Peak Prominence", value=0.0)
     st.sidebar.markdown("---")
 
     # -------- PSD --------
@@ -521,7 +521,8 @@ if uploaded_file:
         for c in ["X (40g)","Y (40g)","Z (40g)"]:
             f, vals = apply_fft(df[c].values, fs)
             mask = (f >= fmin) & (f <= fmax)
-            peaks = detect_peaks(f[mask], vals[mask])
+            peaks = detect_peaks(f[mask], vals[mask], height=peak_height,
+                                 distance=peak_distance, prominence=peak_prominence)
             fig.add_trace(go.Scatter(x=f[mask], y=vals[mask], name=c))
             fig.add_trace(go.Scatter(x=f[mask][peaks], y=vals[mask][peaks],
                                      mode="markers", marker=dict(color="red"), name=f"{c} Peaks"))
@@ -569,4 +570,3 @@ if uploaded_file:
             st.info("Run model")
 else:
     st.info("Upload file to start")
-
