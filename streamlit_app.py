@@ -17,53 +17,6 @@
 # st.set_page_config(layout="wide")
 # st.title("📊 enDAQ SHM Dashboard (Channel 80)")
 
-# # ================== SIDEBAR ==================
-# st.sidebar.header("General Settings")
-
-# # Moving average
-# ma_window = st.sidebar.slider("Moving Average Window", 1, 50, 5)
-
-# # Resample ratio
-# resample_ratio = st.sidebar.number_input("Resample Ratio (target fs / current fs)", value=1.0, min_value=0.0)
-
-# # Optional override
-# override_fs = st.sidebar.checkbox("Override Sampling Frequency", False)
-# manual_fs = st.sidebar.number_input("Manual fs (Hz)", value=4000.0)
-
-# # -------- FFT SETTINGS --------
-# st.sidebar.header("FFT Settings")
-# use_windowing = st.sidebar.checkbox("Windowing", False)
-# use_averaging = st.sidebar.checkbox("Averaging", False)
-# use_overlap = st.sidebar.checkbox("Overlap", False)
-# window_type = "hann"
-# window_size = 1024
-# overlap_factor = 0.5
-# if use_windowing:
-#     window_type = st.sidebar.selectbox("Window Type", ["hann", "hamming", "blackman", "bartlett"])
-# if use_averaging or use_overlap:
-#     window_size = st.sidebar.slider("Window Size", 128, 4096, 1024)
-# if use_overlap:
-#     overlap_factor = st.sidebar.slider("Overlap Factor", 0.1, 0.9, 0.5)
-
-# # Frequency range
-# st.sidebar.subheader("Frequency Range")
-# fmin = st.sidebar.number_input("Min Frequency", value=0.0)
-# fmax = st.sidebar.number_input("Max Frequency", value=2000.0)
-
-# # -------- PEAK DETECTION --------
-# st.sidebar.header("Peak Detection")
-# peak_height = st.sidebar.number_input("Min Height", value=0.0)
-# peak_distance = st.sidebar.slider("Min Distance", 1, 200, 20)
-# peak_prominence = st.sidebar.number_input("Prominence", value=0.0)
-
-# # -------- PSD --------
-# st.sidebar.subheader("PSD")
-# nperseg = st.sidebar.slider("nperseg", 128, 4096, 1024)
-
-# # -------- ANOMALY --------
-# st.sidebar.subheader("Anomaly Detection")
-# contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.01)
-
 # # ================== FILE ==================
 # uploaded_file = st.file_uploader("Upload IDE file", type=["ide"])
 
@@ -157,27 +110,74 @@
 #         df_full = df_full.resample(freq_str).mean().interpolate()
 #         fs_auto = 1.0 / dt
 
-#     # Apply optional manual fs
-#     fs = manual_fs if override_fs else fs_auto
+#     # ---- Display auto fs at the top ----
 #     st.sidebar.write(f"📌 Auto fs: {fs_auto:.2f} Hz")
+
+#     # ---- Optional override fs ----
+#     override_fs = st.sidebar.checkbox("Override Sampling Frequency", False)
+#     manual_fs = st.sidebar.number_input("Manual fs (Hz)", value=fs_auto)
+#     fs = manual_fs if override_fs else fs_auto
 #     if override_fs:
 #         st.sidebar.write(f"⚠️ Using manual fs: {fs:.2f} Hz")
 
-#     # ---- Time range slider ----
+#     # ---- Time range selection (top of sidebar) ----
 #     duration_sec = len(df_full) / fs
-#     max_window_sec = min(10.0, duration_sec)  # default 10 sec window
-#     time_range = st.sidebar.slider(
+#     max_window = min(60.0, duration_sec)
+#     st.sidebar.markdown(f"**Select start/end seconds (max window = 60 sec)**")
+#     start_time, end_time = st.sidebar.slider(
 #         "Time Range (s)",
 #         0.0,
 #         duration_sec,
-#         (0.0, max_window_sec)
+#         (0.0, min(60.0, duration_sec))
 #     )
-#     start_time, end_time = time_range
+#     # enforce max window = 60
+#     if end_time - start_time > 60:
+#         end_time = start_time + 60
+#         st.sidebar.warning("⚠️ Maximum window = 60 sec, adjusted automatically")
 #     st.sidebar.write(f"Selected window: {end_time - start_time:.2f} sec")
 
 #     start_idx = int(start_time * fs)
 #     end_idx = int(end_time * fs)
 #     df = df_full.iloc[start_idx:end_idx]
+
+#     # ================== SIDEBAR CONTROLS ==================
+#     st.sidebar.header("General Settings")
+#     ma_window = st.sidebar.slider("Moving Average Window", 1, 50, 5)
+#     resample_ratio = st.sidebar.number_input("Resample Ratio (target fs / current fs)", value=1.0)
+
+#     # -------- FFT SETTINGS --------
+#     st.sidebar.header("FFT Settings")
+#     use_windowing = st.sidebar.checkbox("Windowing", False)
+#     use_averaging = st.sidebar.checkbox("Averaging", False)
+#     use_overlap = st.sidebar.checkbox("Overlap", False)
+#     window_type = "hann"
+#     window_size = 1024
+#     overlap_factor = 0.5
+#     if use_windowing:
+#         window_type = st.sidebar.selectbox("Window Type", ["hann", "hamming", "blackman", "bartlett"])
+#     if use_averaging or use_overlap:
+#         window_size = st.sidebar.slider("Window Size", 128, 4096, 1024)
+#     if use_overlap:
+#         overlap_factor = st.sidebar.slider("Overlap Factor", 0.1, 0.9, 0.5)
+
+#     # Frequency range
+#     st.sidebar.subheader("Frequency Range")
+#     fmin = st.sidebar.number_input("Min Frequency", value=0.0)
+#     fmax = st.sidebar.number_input("Max Frequency", value=50.0)
+
+#     # -------- PEAK DETECTION --------
+#     st.sidebar.header("Peak Detection")
+#     peak_height = st.sidebar.number_input("Min Height", value=0.0)
+#     peak_distance = st.sidebar.slider("Min Distance", 1, 200, 20)
+#     peak_prominence = st.sidebar.number_input("Prominence", value=0.0)
+
+#     # -------- PSD --------
+#     st.sidebar.subheader("PSD")
+#     nperseg = st.sidebar.slider("nperseg", 128, 4096, 1024)
+
+#     # -------- ANOMALY --------
+#     st.sidebar.subheader("Anomaly Detection")
+#     contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.01)
 
 #     # ---- Optional resample ratio ----
 #     if resample_ratio != 1.0:
@@ -250,7 +250,9 @@
 
 # else:
 #     st.info("Upload an IDE file to start")
-################################# Rev 2
+
+
+# ################################# Rev 2
 # ================== IMPORTS ==================
 import streamlit as st
 import numpy as np
@@ -329,6 +331,10 @@ def run_anomaly(df):
     df["anomaly"] = model.fit_predict(df[["X (40g)", "Y (40g)", "Z (40g)"]])
     return df
 
+def compute_rms(df):
+    rms = np.sqrt((df[["X (40g)", "Y (40g)", "Z (40g)"]]**2).mean(axis=1))
+    return rms
+
 # ================== MAIN ==================
 if uploaded_file:
     uploaded_file.seek(0)
@@ -358,7 +364,7 @@ if uploaded_file:
     if irregular:
         st.warning("⚠️ Irregular sampling detected → resampling to uniform grid")
         dt = 1 / fs_auto
-        freq_str = f"{int(dt*1000)}L"  # milliseconds
+        freq_str = f"{int(dt*1000)}L"
         df_full = df_full.resample(freq_str).mean().interpolate()
         fs_auto = 1.0 / dt
 
@@ -372,22 +378,18 @@ if uploaded_file:
     if override_fs:
         st.sidebar.write(f"⚠️ Using manual fs: {fs:.2f} Hz")
 
-    # ---- Time range selection (top of sidebar) ----
+    # ---- Time range selection as numeric inputs ----
     duration_sec = len(df_full) / fs
     max_window = min(60.0, duration_sec)
-    st.sidebar.markdown(f"**Select start/end seconds (max window = 60 sec)**")
-    start_time, end_time = st.sidebar.slider(
-        "Time Range (s)",
-        0.0,
-        duration_sec,
-        (0.0, min(60.0, duration_sec))
-    )
-    # enforce max window = 60
+    st.sidebar.markdown("**Enter start and end seconds (max window = 60 sec)**")
+    start_time = st.sidebar.number_input("Start Time (s)", min_value=0.0, max_value=duration_sec, value=0.0)
+    end_time = st.sidebar.number_input("End Time (s)", min_value=0.0, max_value=duration_sec, value=min(60.0, duration_sec))
+
     if end_time - start_time > 60:
         end_time = start_time + 60
         st.sidebar.warning("⚠️ Maximum window = 60 sec, adjusted automatically")
-    st.sidebar.write(f"Selected window: {end_time - start_time:.2f} sec")
 
+    st.sidebar.write(f"Selected window: {end_time - start_time:.2f} sec")
     start_idx = int(start_time * fs)
     end_idx = int(end_time * fs)
     df = df_full.iloc[start_idx:end_idx]
@@ -415,7 +417,7 @@ if uploaded_file:
     # Frequency range
     st.sidebar.subheader("Frequency Range")
     fmin = st.sidebar.number_input("Min Frequency", value=0.0)
-    fmax = st.sidebar.number_input("Max Frequency", value=2000.0)
+    fmax = st.sidebar.number_input("Max Frequency", value=50.0)  # default 50 Hz
 
     # -------- PEAK DETECTION --------
     st.sidebar.header("Peak Detection")
@@ -444,10 +446,16 @@ if uploaded_file:
         filt = df.copy()
         for c in ["X (40g)", "Y (40g)", "Z (40g)"]:
             filt[c] = filt[c].rolling(ma_window, min_periods=1).mean()
+
         fig = go.Figure()
         for c in ["X (40g)", "Y (40g)", "Z (40g)"]:
             fig.add_trace(go.Scatter(x=df.index, y=df[c], name=f"{c} Raw"))
             fig.add_trace(go.Scatter(x=filt.index, y=filt[c], name=f"{c} MA"))
+
+        # RMS
+        rms = compute_rms(df)
+        fig.add_trace(go.Scatter(x=df.index, y=rms, name="RMS", line=dict(color="black", dash="dash")))
+
         st.plotly_chart(fig, use_container_width=True)
 
     # -------- STATS --------
