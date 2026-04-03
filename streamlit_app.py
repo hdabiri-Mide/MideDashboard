@@ -193,22 +193,16 @@ if uploaded_file:
     duration_placeholder.write(f"⏱️ Duration: {duration_sec:.2f} seconds")
 
     # ---- Proper time range slider ----
-    # time_range = st.sidebar.slider(
-    #     "Time Range (s)",
-    #     0.0,
-    #     duration_sec,
-    #     (0.0, duration_sec)
-    # )
-    # start_time, end_time = time_range
+    
     time_range = time_slider_placeholder.slider(
     "Time Range (s)",
     0.0,
     duration_sec,
     (0.0, duration_sec)
     )
-
+    
     start_time, end_time = time_range
-
+    
     st.sidebar.write(f"Selected window: {end_time - start_time:.2f} sec")
 
     # ---- Manual fs default ----
