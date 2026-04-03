@@ -17,33 +17,22 @@ st.set_page_config(layout="wide")
 st.title("📊 enDAQ SHM Dashboard (Channel 80)")
 
 # ================== SIDEBAR ==================
-st.sidebar.header("Sampling Frequency")
+st.sidebar.header("General Settings")
 
-fs_auto_placeholder = st.sidebar.empty()
+start_idx = st.sidebar.slider("Start Index", 0, 200000, 50000)
+end_idx = st.sidebar.slider("End Index", 10000, 300000, 60000)
 
-use_manual_fs = st.sidebar.checkbox("Use Manual fs", False)
-manual_fs = st.sidebar.number_input("Manual fs (Hz)", value=0.0)
-
-# -------- TIME --------
-st.sidebar.header("Time Selection")
-duration_placeholder = st.sidebar.empty()
-
-# temp placeholders (updated later)
-start_time = st.sidebar.slider("Start Time (s)", 0.0, 1.0, 0.0)
-end_time = st.sidebar.slider("End Time (s)", 0.0, 1.0, 1.0)
-
-# -------- RESAMPLING --------
-st.sidebar.header("Resampling")
-resample_ratio = st.sidebar.slider(
-    "Resample Ratio (target fs / current fs)",
-    0.1, 2.0, 1.0, step=0.1
-)
-
-# -------- OTHER SETTINGS --------
 ma_window = st.sidebar.slider("Moving Average Window", 1, 50, 5)
 
-# FFT
+resample_rate = st.sidebar.selectbox("Resample", ["None", "1S", "5S", "10S"])
+
+# Optional override
+override_fs = st.sidebar.checkbox("Override Sampling Frequency", False)
+manual_fs = st.sidebar.number_input("Manual fs (Hz)", value=4000.0)
+
+# -------- FFT SETTINGS --------
 st.sidebar.header("FFT Settings")
+
 use_windowing = st.sidebar.checkbox("Windowing", False)
 use_averaging = st.sidebar.checkbox("Averaging", False)
 use_overlap = st.sidebar.checkbox("Overlap", False)
@@ -66,17 +55,17 @@ st.sidebar.subheader("Frequency Range")
 fmin = st.sidebar.number_input("Min Frequency", value=0.0)
 fmax = st.sidebar.number_input("Max Frequency", value=2000.0)
 
-# Peaks
+# -------- PEAK DETECTION --------
 st.sidebar.header("Peak Detection")
 peak_height = st.sidebar.number_input("Min Height", value=0.0)
 peak_distance = st.sidebar.slider("Min Distance", 1, 200, 20)
 peak_prominence = st.sidebar.number_input("Prominence", value=0.0)
 
-# PSD
+# -------- PSD --------
 st.sidebar.subheader("PSD")
 nperseg = st.sidebar.slider("nperseg", 128, 4096, 1024)
 
-# Anomaly
+# -------- ANOMALY --------
 st.sidebar.subheader("Anomaly Detection")
 contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.01)
 
@@ -86,8 +75,9 @@ uploaded_file = st.file_uploader("Upload IDE file", type=["ide"])
 # ================== FUNCTIONS ==================
 
 def estimate_fs(time_index):
-    dt = np.diff(time_index.astype('int64') / 1e9)
-    dt = dt[dt > 0]
+    """Robust sampling frequency estimation"""
+    dt = np.diff(time_index.astype('int64') / 1e9)  # convert ns → seconds
+    dt = dt[dt > 0]  # remove zero/negative
 
     if len(dt) == 0:
         return None, True
@@ -96,7 +86,9 @@ def estimate_fs(time_index):
     std_dt = np.std(dt)
 
     fs_est = 1.0 / median_dt
-    irregular = (std_dt / median_dt) > 0.01
+
+    # detect irregular sampling
+    irregular = (std_dt / median_dt) > 0.01  # >1% variation
 
     return fs_est, irregular
 
@@ -170,71 +162,51 @@ if uploaded_file:
 
     doc = endaq.ide.get_doc(path)
 
-    # ---- Load data ----
-    acc_df = endaq.ide.get_primary_sensor_data(
-        doc=doc.channels[80],
-        measurement_type="acceleration",
-        time_mode="datetime"
-    )
-    acc_df = acc_df - acc_df.median()
+    # ================== LOAD CHANNEL 80 =================
+    try:
+        acc_df = endaq.ide.get_primary_sensor_data(
+            doc=doc.channels[80],
+            measurement_type="acceleration",
+            time_mode="datetime"
+        )
+        acc_df = acc_df - acc_df.median()
+    except Exception as e:
+        st.error(f"❌ Channel 80 not found: {e}")
+        st.stop()
 
     df = acc_df.copy()
 
-    # ---- Estimate fs ----
+    # ---- Select data ----
+    df = df.iloc[start_idx:end_idx]
+
+    # ---- Estimate fs BEFORE resampling ----
     fs_auto, irregular = estimate_fs(df.index)
 
     if fs_auto is None:
         st.error("❌ Could not estimate sampling frequency")
         st.stop()
 
-    # ---- Duration ----
-    n_samples = len(df)
-    duration_sec = n_samples / fs_auto
-    duration_placeholder.write(f"⏱️ Duration: {duration_sec:.2f} seconds")
-
-    # ---- Update sliders ----
-    start_time = st.sidebar.slider("Start Time (s)", 0.0, duration_sec, 0.0)
-    end_time = st.sidebar.slider("End Time (s)", 0.0, duration_sec, duration_sec)
-
-    # ---- Manual fs default ----
-    if manual_fs == 0.0:
-        manual_fs = fs_auto
-
-    fs_auto_placeholder.write(f"📌 Auto fs: {fs_auto:.2f} Hz")
-
     # ---- Handle irregular sampling ----
     if irregular:
-        st.warning("⚠️ Irregular sampling → resampling")
+        st.warning("⚠️ Irregular sampling detected → resampling to uniform grid")
 
+        # resample to median dt
         dt = 1 / fs_auto
-        freq_str = f"{int(dt*1000)}L"
-        df = df.resample(freq_str).mean().interpolate()
-
-    # ---- Time slicing ----
-    start_idx = int(start_time * fs_auto)
-    end_idx = int(end_time * fs_auto)
-
-    start_idx = max(0, min(start_idx, n_samples - 1))
-    end_idx = max(start_idx + 1, min(end_idx, n_samples))
-
-    df = df.iloc[start_idx:end_idx]
-
-    # ---- Ratio resampling ----
-    if resample_ratio != 1.0:
-        target_fs = fs_auto * resample_ratio
-        dt_new = 1 / target_fs
-        freq_str = f"{int(dt_new * 1000)}L"
+        freq_str = f"{int(dt*1000)}L"  # milliseconds
 
         df = df.resample(freq_str).mean().interpolate()
-        fs_auto = target_fs
+
+    # ---- Apply user resampling ----
+    if resample_rate != "None":
+        df = df.resample(resample_rate).mean()
+        fs_auto = 1 / (pd.to_timedelta(resample_rate).total_seconds())
 
     # ---- Final fs ----
-    fs = manual_fs if use_manual_fs else fs_auto
+    fs = manual_fs if override_fs else fs_auto
 
-    if use_manual_fs:
-        st.sidebar.warning(f"Using Manual fs: {fs:.2f} Hz")
-    else:
-        st.sidebar.success(f"Using Auto fs: {fs:.2f} Hz")
+    st.sidebar.write(f"📌 Auto fs: {fs_auto:.2f} Hz")
+    if override_fs:
+        st.sidebar.write(f"⚠️ Using manual fs: {fs:.2f} Hz")
 
     # ================== TABS ==================
     tab1, tab2, tab3, tab4 = st.tabs(["Time", "Stats", "FFT/PSD", "Anomaly"])
@@ -282,6 +254,7 @@ if uploaded_file:
         st.plotly_chart(fig, use_container_width=True)
         st.dataframe(pd.DataFrame(peak_table))
 
+        # PSD
         fig2 = go.Figure()
         for c in ["X (40g)", "Y (40g)", "Z (40g)"]:
             f, Pxx = compute_psd(df[c].values, fs)
