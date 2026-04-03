@@ -325,18 +325,18 @@ def run_pca(df, n_components, contamination):
     explained = np.sum(pca.explained_variance_ratio_)
     return df, explained
 
-def run_kmeans(df, n_clusters, contamination):
-    X = df[["X (40g)", "Y (40g)", "Z (40g)"]]
-    kmeans = KMeans(n_clusters=n_clusters, random_state=42).fit(X)
+# def run_kmeans(df, n_clusters, contamination):
+#     X = df[["X (40g)", "Y (40g)", "Z (40g)"]]
+#     kmeans = KMeans(n_clusters=n_clusters, random_state=42).fit(X)
 
-    dist = np.min(kmeans.transform(X), axis=1)
-    threshold = np.percentile(dist, 100*(1-contamination))
+#     dist = np.min(kmeans.transform(X), axis=1)
+#     threshold = np.percentile(dist, 100*(1-contamination))
 
-    df["anomaly"] = np.where(dist > threshold, -1, 1)
-    df["score"] = dist
+#     df["anomaly"] = np.where(dist > threshold, -1, 1)
+#     df["score"] = dist
 
-    sil = silhouette_score(X, kmeans.labels_)
-    return df, sil
+#     sil = silhouette_score(X, kmeans.labels_)
+#     return df, sil
 
 # ================== MAIN ==================
 if uploaded_file:
@@ -390,7 +390,8 @@ if uploaded_file:
     # -------- MODEL SETTINGS --------
     st.sidebar.header("🚨 Anomaly Detection")
 
-    model_choice = st.sidebar.selectbox("Model", ["Isolation Forest", "PCA", "KMeans"])
+    # model_choice = st.sidebar.selectbox("Model", ["Isolation Forest", "PCA", "KMeans"])
+    model_choice = st.sidebar.selectbox("Model", ["Isolation Forest", "PCA"])
 
     # Dynamic hyperparameters
     if model_choice == "Isolation Forest":
@@ -400,9 +401,9 @@ if uploaded_file:
         n_components = st.sidebar.slider("n_components", 1, 3, 2)
         contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.01)
 
-    elif model_choice == "KMeans":
-        n_clusters = st.sidebar.slider("n_clusters", 2, 5, 2)
-        contamination = st.sidebar.slider("Outlier %", 0.001, 0.1, 0.01)
+    # elif model_choice == "KMeans":
+    #     n_clusters = st.sidebar.slider("n_clusters", 2, 5, 2)
+    #     contamination = st.sidebar.slider("Outlier %", 0.001, 0.1, 0.01)
 
     run_button = st.sidebar.button("▶ Run Model")
 
@@ -453,9 +454,9 @@ if uploaded_file:
                 df_an, explained = run_pca(df_an, n_components, contamination)
                 st.write(f"Explained variance: {explained:.3f}")
 
-            elif model_choice == "KMeans":
-                df_an, sil = run_kmeans(df_an, n_clusters, contamination)
-                st.write(f"Silhouette score: {sil:.3f}")
+            # elif model_choice == "KMeans":
+            #     df_an, sil = run_kmeans(df_an, n_clusters, contamination)
+            #     st.write(f"Silhouette score: {sil:.3f}")
 
             anomalies = df_an[df_an["anomaly"] == -1]
 
