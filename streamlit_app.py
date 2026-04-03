@@ -17,20 +17,20 @@ st.set_page_config(layout="wide")
 st.title("📊 enDAQ SHM Dashboard (Channel 80)")
 
 # ================== SIDEBAR ==================
-st.sidebar.header("Sampling Frequency")
 
+# -------- SAMPLING FREQUENCY --------
+st.sidebar.header("Sampling Frequency")
 fs_auto_placeholder = st.sidebar.empty()
 
 use_manual_fs = st.sidebar.checkbox("Use Manual fs", False)
 manual_fs = st.sidebar.number_input("Manual fs (Hz)", value=0.0)
 
-# -------- TIME --------
+# -------- TIME RANGE --------
 st.sidebar.header("Time Selection")
 duration_placeholder = st.sidebar.empty()
 
-# temp placeholders (updated later)
-start_time = st.sidebar.slider("Start Time (s)", 0.0, 1.0, 0.0)
-end_time = st.sidebar.slider("End Time (s)", 0.0, 1.0, 1.0)
+# placeholder (before file load)
+time_range = st.sidebar.slider("Time Range (s)", 0.0, 1.0, (0.0, 1.0))
 
 # -------- RESAMPLING --------
 st.sidebar.header("Resampling")
@@ -192,9 +192,16 @@ if uploaded_file:
     duration_sec = n_samples / fs_auto
     duration_placeholder.write(f"⏱️ Duration: {duration_sec:.2f} seconds")
 
-    # ---- Update sliders ----
-    start_time = st.sidebar.slider("Start Time (s)", 0.0, duration_sec, 0.0)
-    end_time = st.sidebar.slider("End Time (s)", 0.0, duration_sec, duration_sec)
+    # ---- Proper time range slider ----
+    time_range = st.sidebar.slider(
+        "Time Range (s)",
+        0.0,
+        duration_sec,
+        (0.0, duration_sec)
+    )
+    start_time, end_time = time_range
+
+    st.sidebar.write(f"Selected window: {end_time - start_time:.2f} sec")
 
     # ---- Manual fs default ----
     if manual_fs == 0.0:
