@@ -146,13 +146,14 @@ if uploaded_file:
     # ---- DEBUG (optional) ----
     # st.write(endaq.ide.get_channel_table(doc))
 
-    # ================== LOAD CHANNEL 80 ==================
+    # ================== LOAD CHANNEL 80 =================
     try:
         acc_df = endaq.ide.get_primary_sensor_data(
             doc=doc.channels[80],
             measurement_type="acceleration",
             time_mode="datetime"
         )
+        acc_df = acc_df - acc_df.median()
     except Exception as e:
         st.error(f"❌ Channel 80 not found: {e}")
         st.stop()
