@@ -453,8 +453,8 @@ if uploaded_file:
     run_button = st.sidebar.button("Run Model")
 
     # ================= TABS =================
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Time","Stats","FFT/PSD","Anomaly","Time-Frequency"])
-
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Time","Stats","FFT/PSD","Time-Frequency","Anomaly"])
+    
     # -------- TIME --------
     with tab1:
         fig = go.Figure()
@@ -462,12 +462,12 @@ if uploaded_file:
             fig.add_trace(go.Scatter(x=df.index, y=df[c], name=c))
         fig.add_trace(go.Scatter(x=df.index, y=compute_rms(df), name="RMS", line=dict(dash="dash")))
         st.plotly_chart(fig, width="stretch")
-
+    
     # -------- STATS --------
     with tab2:
         st.dataframe(df.describe())
         plot_histograms(df)
-
+    
     # -------- FFT / PSD --------
     with tab3:
         fig = go.Figure()
@@ -483,9 +483,24 @@ if uploaded_file:
             fig2.add_trace(go.Scatter(x=f[mask], y=Pxx[mask], name=c))
         fig2.update_layout(yaxis_type="log")
         st.plotly_chart(fig2, width="stretch")
-
-    # -------- ANOMALY --------
+    
+    # -------- TIME-FREQUENCY --------
     with tab4:
+        signal = df["X (40g)"].values
+        # STFT
+        t_stft, f_stft, Z = compute_stft(signal, fs, stft_window, stft_overlap)
+        fig = go.Figure(data=go.Heatmap(z=Z.T, x=t_stft, y=f_stft, colorscale="Viridis"))
+        st.plotly_chart(fig, width="stretch")
+        # Wavelet
+        if wavelet_available:
+            f_cwt, power = compute_cwt(signal, fs, wavelet_type, max_scale)
+            fig2 = go.Figure(data=go.Heatmap(z=power, x=np.arange(len(signal))/fs, y=f_cwt, colorscale="Turbo"))
+            st.plotly_chart(fig2, width="stretch")
+        else:
+            st.info("Wavelet analysis unavailable (PyWavelets not installed)")
+    
+    # -------- ANOMALY --------
+    with tab5:
         if run_button:
             df_an = df.copy()
             if model_choice == "Isolation Forest":
