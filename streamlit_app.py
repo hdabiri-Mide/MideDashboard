@@ -77,6 +77,10 @@
 #     df["anomaly"] = model.fit_predict(df[["X (40g)", "Y (40g)", "Z (40g)"]])
 #     return df
 
+# def compute_rms(df):
+#     rms = np.sqrt((df[["X (40g)", "Y (40g)", "Z (40g)"]]**2).mean(axis=1))
+#     return rms
+
 # # ================== MAIN ==================
 # if uploaded_file:
 #     uploaded_file.seek(0)
@@ -106,7 +110,7 @@
 #     if irregular:
 #         st.warning("⚠️ Irregular sampling detected → resampling to uniform grid")
 #         dt = 1 / fs_auto
-#         freq_str = f"{int(dt*1000)}L"  # milliseconds
+#         freq_str = f"{int(dt*1000)}L"
 #         df_full = df_full.resample(freq_str).mean().interpolate()
 #         fs_auto = 1.0 / dt
 
@@ -120,22 +124,18 @@
 #     if override_fs:
 #         st.sidebar.write(f"⚠️ Using manual fs: {fs:.2f} Hz")
 
-#     # ---- Time range selection (top of sidebar) ----
+#     # ---- Time range selection as numeric inputs ----
 #     duration_sec = len(df_full) / fs
-#     max_window = min(60.0, duration_sec)
-#     st.sidebar.markdown(f"**Select start/end seconds (max window = 60 sec)**")
-#     start_time, end_time = st.sidebar.slider(
-#         "Time Range (s)",
-#         0.0,
-#         duration_sec,
-#         (0.0, min(60.0, duration_sec))
-#     )
-#     # enforce max window = 60
-#     if end_time - start_time > 60:
-#         end_time = start_time + 60
-#         st.sidebar.warning("⚠️ Maximum window = 60 sec, adjusted automatically")
-#     st.sidebar.write(f"Selected window: {end_time - start_time:.2f} sec")
+#     max_window = min(40.0, duration_sec)
+#     st.sidebar.markdown("**Enter start and end seconds (max window = 40 sec)**")
+#     start_time = st.sidebar.number_input("Start Time (s)", min_value=0.0, max_value=duration_sec, value=0.0)
+#     end_time = st.sidebar.number_input("End Time (s)", min_value=0.0, max_value=duration_sec, value=min(40.0, duration_sec))
 
+#     if end_time - start_time > 40:
+#         end_time = start_time + 40
+#         st.sidebar.warning("⚠️ Maximum window = 40 sec, adjusted automatically")
+
+#     st.sidebar.write(f"Selected window: {end_time - start_time:.2f} sec")
 #     start_idx = int(start_time * fs)
 #     end_idx = int(end_time * fs)
 #     df = df_full.iloc[start_idx:end_idx]
@@ -163,7 +163,7 @@
 #     # Frequency range
 #     st.sidebar.subheader("Frequency Range")
 #     fmin = st.sidebar.number_input("Min Frequency", value=0.0)
-#     fmax = st.sidebar.number_input("Max Frequency", value=50.0)
+#     fmax = st.sidebar.number_input("Max Frequency", value=50.0)  # default 50 Hz
 
 #     # -------- PEAK DETECTION --------
 #     st.sidebar.header("Peak Detection")
@@ -192,10 +192,16 @@
 #         filt = df.copy()
 #         for c in ["X (40g)", "Y (40g)", "Z (40g)"]:
 #             filt[c] = filt[c].rolling(ma_window, min_periods=1).mean()
+
 #         fig = go.Figure()
 #         for c in ["X (40g)", "Y (40g)", "Z (40g)"]:
 #             fig.add_trace(go.Scatter(x=df.index, y=df[c], name=f"{c} Raw"))
 #             fig.add_trace(go.Scatter(x=filt.index, y=filt[c], name=f"{c} MA"))
+
+#         # RMS
+#         rms = compute_rms(df)
+#         fig.add_trace(go.Scatter(x=df.index, y=rms, name="RMS", line=dict(color="black", dash="dash")))
+
 #         st.plotly_chart(fig, use_container_width=True)
 
 #     # -------- STATS --------
@@ -250,6 +256,7 @@
 
 # else:
 #     st.info("Upload an IDE file to start")
+
 
 
 # ################################# Rev 2
@@ -368,39 +375,35 @@ if uploaded_file:
         df_full = df_full.resample(freq_str).mean().interpolate()
         fs_auto = 1.0 / dt
 
-    # ---- Display auto fs at the top ----
-    st.sidebar.write(f"📌 Auto fs: {fs_auto:.2f} Hz")
+    # ================= SIDEBAR =================
+    st.sidebar.header("📁 File Info & Time Selection")
+    duration_sec = len(df_full) / fs_auto
+    st.sidebar.write(f"Total duration: {duration_sec:.2f} s")
 
-    # ---- Optional override fs ----
+    max_window = min(60.0, duration_sec)
+    st.sidebar.markdown("**Enter start and end seconds (max window = 60 sec)**")
+    start_time = st.sidebar.number_input("Start Time (s)", min_value=0.0, max_value=duration_sec, value=0.0)
+    end_time = st.sidebar.number_input("End Time (s)", min_value=0.0, max_value=duration_sec, value=min(60.0, duration_sec))
+    if end_time - start_time > 60:
+        end_time = start_time + 60
+        st.sidebar.warning("⚠️ Maximum window = 60 sec, adjusted automatically")
+    st.sidebar.write(f"Selected window: {end_time - start_time:.2f} sec")
+    start_idx = int(start_time * fs_auto)
+    end_idx = int(end_time * fs_auto)
+    df = df_full.iloc[start_idx:end_idx]
+
+    st.sidebar.header("⚙ Sampling Frequency")
+    st.sidebar.write(f"📌 Auto fs: {fs_auto:.2f} Hz")
     override_fs = st.sidebar.checkbox("Override Sampling Frequency", False)
     manual_fs = st.sidebar.number_input("Manual fs (Hz)", value=fs_auto)
     fs = manual_fs if override_fs else fs_auto
     if override_fs:
         st.sidebar.write(f"⚠️ Using manual fs: {fs:.2f} Hz")
 
-    # ---- Time range selection as numeric inputs ----
-    duration_sec = len(df_full) / fs
-    max_window = min(40.0, duration_sec)
-    st.sidebar.markdown("**Enter start and end seconds (max window = 40 sec)**")
-    start_time = st.sidebar.number_input("Start Time (s)", min_value=0.0, max_value=duration_sec, value=0.0)
-    end_time = st.sidebar.number_input("End Time (s)", min_value=0.0, max_value=duration_sec, value=min(40.0, duration_sec))
+    st.sidebar.header("🟢 Moving Average")
+    ma_window = st.sidebar.slider("Window size", 1, 50, 5)
 
-    if end_time - start_time > 40:
-        end_time = start_time + 40
-        st.sidebar.warning("⚠️ Maximum window = 40 sec, adjusted automatically")
-
-    st.sidebar.write(f"Selected window: {end_time - start_time:.2f} sec")
-    start_idx = int(start_time * fs)
-    end_idx = int(end_time * fs)
-    df = df_full.iloc[start_idx:end_idx]
-
-    # ================== SIDEBAR CONTROLS ==================
-    st.sidebar.header("General Settings")
-    ma_window = st.sidebar.slider("Moving Average Window", 1, 50, 5)
-    resample_ratio = st.sidebar.number_input("Resample Ratio (target fs / current fs)", value=1.0)
-
-    # -------- FFT SETTINGS --------
-    st.sidebar.header("FFT Settings")
+    st.sidebar.header("📊 FFT Settings")
     use_windowing = st.sidebar.checkbox("Windowing", False)
     use_averaging = st.sidebar.checkbox("Averaging", False)
     use_overlap = st.sidebar.checkbox("Overlap", False)
@@ -413,30 +416,19 @@ if uploaded_file:
         window_size = st.sidebar.slider("Window Size", 128, 4096, 1024)
     if use_overlap:
         overlap_factor = st.sidebar.slider("Overlap Factor", 0.1, 0.9, 0.5)
-
-    # Frequency range
-    st.sidebar.subheader("Frequency Range")
+    st.sidebar.subheader("Frequency range")
     fmin = st.sidebar.number_input("Min Frequency", value=0.0)
     fmax = st.sidebar.number_input("Max Frequency", value=50.0)  # default 50 Hz
-
-    # -------- PEAK DETECTION --------
-    st.sidebar.header("Peak Detection")
+    st.sidebar.subheader("Peak Detection")
     peak_height = st.sidebar.number_input("Min Height", value=0.0)
     peak_distance = st.sidebar.slider("Min Distance", 1, 200, 20)
     peak_prominence = st.sidebar.number_input("Prominence", value=0.0)
 
-    # -------- PSD --------
-    st.sidebar.subheader("PSD")
+    st.sidebar.header("📈 PSD Settings")
     nperseg = st.sidebar.slider("nperseg", 128, 4096, 1024)
 
-    # -------- ANOMALY --------
-    st.sidebar.subheader("Anomaly Detection")
+    st.sidebar.header("🚨 Anomaly Detection (Isolation Forest)")
     contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.01)
-
-    # ---- Optional resample ratio ----
-    if resample_ratio != 1.0:
-        df = df.resample(f"{1/fs/resample_ratio}S").mean()
-        fs = fs * resample_ratio
 
     # ================== TABS ==================
     tab1, tab2, tab3, tab4 = st.tabs(["Time", "Stats", "FFT/PSD", "Anomaly"])
