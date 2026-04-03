@@ -258,12 +258,12 @@ from scipy.signal import welch, get_window, find_peaks
 from sklearn.ensemble import IsolationForest
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
 
 # ================== PAGE ==================
 st.set_page_config(layout="wide")
 st.title("📊 enDAQ SHM Dashboard (Channel 80)")
 
-# ================== FILE ==================
 uploaded_file = st.file_uploader("Upload IDE file", type=["ide"])
 
 # ================== FUNCTIONS ==================
@@ -294,18 +294,26 @@ def detect_peaks(freqs, values):
                           prominence=peak_prominence)
     return peaks
 
+def plot_histograms(df):
+    fig, ax = plt.subplots(1, 3, figsize=(15, 4))
+    for i, col in enumerate(["X (40g)", "Y (40g)", "Z (40g)"]):
+        sns.histplot(df[col], bins=50, kde=True, ax=ax[i])
+        ax[i].set_title(col)
+    st.pyplot(fig)
+
 def compute_rms(df):
     return np.sqrt((df[["X (40g)", "Y (40g)", "Z (40g)"]]**2).mean(axis=1))
 
-# ----------- ML MODELS -----------
-def run_if(df):
+# ----------- MODELS -----------
+def run_if(df, contamination):
     model = IsolationForest(contamination=contamination, random_state=42)
     df["anomaly"] = model.fit_predict(df[["X (40g)", "Y (40g)", "Z (40g)"]])
+    df["score"] = model.decision_function(df[["X (40g)", "Y (40g)", "Z (40g)"]])
     return df
 
-def run_pca(df):
+def run_pca(df, n_components, contamination):
     X = df[["X (40g)", "Y (40g)", "Z (40g)"]]
-    pca = PCA(n_components=2)
+    pca = PCA(n_components=n_components)
     X_pca = pca.fit_transform(X)
     X_rec = pca.inverse_transform(X_pca)
 
@@ -313,17 +321,22 @@ def run_pca(df):
     threshold = np.percentile(error, 100*(1-contamination))
 
     df["anomaly"] = np.where(error > threshold, -1, 1)
-    return df
+    df["score"] = error
+    explained = np.sum(pca.explained_variance_ratio_)
+    return df, explained
 
-def run_kmeans(df):
+def run_kmeans(df, n_clusters, contamination):
     X = df[["X (40g)", "Y (40g)", "Z (40g)"]]
-    kmeans = KMeans(n_clusters=2, random_state=42).fit(X)
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42).fit(X)
 
     dist = np.min(kmeans.transform(X), axis=1)
     threshold = np.percentile(dist, 100*(1-contamination))
 
     df["anomaly"] = np.where(dist > threshold, -1, 1)
-    return df
+    df["score"] = dist
+
+    sil = silhouette_score(X, kmeans.labels_)
+    return df, sil
 
 # ================== MAIN ==================
 if uploaded_file:
@@ -334,7 +347,6 @@ if uploaded_file:
 
     doc = endaq.ide.get_doc(path)
 
-    # ---- Load channel 80 ----
     try:
         acc_df = endaq.ide.get_primary_sensor_data(
             doc=doc.channels[80],
@@ -365,42 +377,85 @@ if uploaded_file:
     if end_time - start_time > 40:
         end_time = start_time + 40
 
-    start_idx = int(start_time * fs_auto)
-    end_idx = int(end_time * fs_auto)
-    df = df_full.iloc[start_idx:end_idx]
+    df = df_full.iloc[int(start_time*fs_auto):int(end_time*fs_auto)]
 
+    # -------- FFT SETTINGS --------
+    st.sidebar.header("📊 FFT Settings")
+    fmin = st.sidebar.number_input("Min Frequency", value=0.0)
+    fmax = st.sidebar.number_input("Max Frequency", value=50.0)
+
+    st.sidebar.header("📈 PSD Settings")
+    nperseg = st.sidebar.slider("nperseg", 128, 4096, 1024)
+
+    # -------- MODEL SETTINGS --------
     st.sidebar.header("🚨 Anomaly Detection")
-    model_choice = st.sidebar.selectbox("Select Model", ["Isolation Forest", "PCA", "KMeans"])
-    contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.01)
 
-    run_button = st.sidebar.button("▶ Run Analysis")
+    model_choice = st.sidebar.selectbox("Model", ["Isolation Forest", "PCA", "KMeans"])
+
+    # Dynamic hyperparameters
+    if model_choice == "Isolation Forest":
+        contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.01)
+
+    elif model_choice == "PCA":
+        n_components = st.sidebar.slider("n_components", 1, 3, 2)
+        contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.01)
+
+    elif model_choice == "KMeans":
+        n_clusters = st.sidebar.slider("n_clusters", 2, 5, 2)
+        contamination = st.sidebar.slider("Outlier %", 0.001, 0.1, 0.01)
+
+    run_button = st.sidebar.button("▶ Run Model")
 
     # ================== TABS ==================
-    tab1, tab2 = st.tabs(["Time + RMS", "Anomaly"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Time", "Stats", "FFT/PSD", "Anomaly"])
 
     # -------- TIME --------
     with tab1:
         fig = go.Figure()
         for c in ["X (40g)", "Y (40g)", "Z (40g)"]:
             fig.add_trace(go.Scatter(x=df.index, y=df[c], name=c))
-
-        rms = compute_rms(df)
-        fig.add_trace(go.Scatter(x=df.index, y=rms, name="RMS", line=dict(dash="dash")))
-
+        fig.add_trace(go.Scatter(x=df.index, y=compute_rms(df),
+                                 name="RMS", line=dict(dash="dash")))
         st.plotly_chart(fig, use_container_width=True)
 
-    # -------- ANOMALY --------
+    # -------- STATS --------
     with tab2:
+        st.dataframe(df.describe())
+        plot_histograms(df)
+
+    # -------- FFT / PSD --------
+    with tab3:
+        fig = go.Figure()
+        for c in ["X (40g)", "Y (40g)", "Z (40g)"]:
+            f, vals = apply_fft(df[c].values, fs_auto)
+            mask = (f >= fmin) & (f <= fmax)
+            fig.add_trace(go.Scatter(x=f[mask], y=vals[mask], name=c))
+        st.plotly_chart(fig, use_container_width=True)
+
+        fig2 = go.Figure()
+        for c in ["X (40g)", "Y (40g)", "Z (40g)"]:
+            f, Pxx = compute_psd(df[c].values, fs_auto)
+            mask = (f >= fmin) & (f <= fmax)
+            fig2.add_trace(go.Scatter(x=f[mask], y=Pxx[mask], name=c))
+        fig2.update_layout(yaxis_type="log")
+        st.plotly_chart(fig2, use_container_width=True)
+
+    # -------- ANOMALY --------
+    with tab4:
         if run_button:
             df_an = df.copy()
 
-            # Select model
             if model_choice == "Isolation Forest":
-                df_an = run_if(df_an)
+                df_an = run_if(df_an, contamination)
+                st.write(f"Mean anomaly score: {df_an['score'].mean():.4f}")
+
             elif model_choice == "PCA":
-                df_an = run_pca(df_an)
+                df_an, explained = run_pca(df_an, n_components, contamination)
+                st.write(f"Explained variance: {explained:.3f}")
+
             elif model_choice == "KMeans":
-                df_an = run_kmeans(df_an)
+                df_an, sil = run_kmeans(df_an, n_clusters, contamination)
+                st.write(f"Silhouette score: {sil:.3f}")
 
             anomalies = df_an[df_an["anomaly"] == -1]
 
@@ -419,7 +474,10 @@ if uploaded_file:
             st.write(f"Anomalies detected: {len(anomalies)}")
 
         else:
-            st.info("Select model and click 'Run Analysis'")
+            st.info("Select model and click 'Run Model'")
+
+else:
+    st.info("Upload an IDE file to start")
 
 else:
     st.info("Upload an IDE file to start")
