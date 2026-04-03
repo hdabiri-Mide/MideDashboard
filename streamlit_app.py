@@ -29,8 +29,8 @@ manual_fs = st.sidebar.number_input("Manual fs (Hz)", value=0.0)
 st.sidebar.header("Time Selection")
 duration_placeholder = st.sidebar.empty()
 
-# placeholder (before file load)
-time_range = st.sidebar.slider("Time Range (s)", 0.0, 1.0, (0.0, 1.0))
+# Create placeholder for slider (important)
+time_slider_placeholder = st.sidebar.empty()
 
 # -------- RESAMPLING --------
 st.sidebar.header("Resampling")
@@ -193,12 +193,20 @@ if uploaded_file:
     duration_placeholder.write(f"⏱️ Duration: {duration_sec:.2f} seconds")
 
     # ---- Proper time range slider ----
-    time_range = st.sidebar.slider(
-        "Time Range (s)",
-        0.0,
-        duration_sec,
-        (0.0, duration_sec)
+    # time_range = st.sidebar.slider(
+    #     "Time Range (s)",
+    #     0.0,
+    #     duration_sec,
+    #     (0.0, duration_sec)
+    # )
+    # start_time, end_time = time_range
+    time_range = time_slider_placeholder.slider(
+    "Time Range (s)",
+    0.0,
+    duration_sec,
+    (0.0, duration_sec)
     )
+
     start_time, end_time = time_range
 
     st.sidebar.write(f"Selected window: {end_time - start_time:.2f} sec")
