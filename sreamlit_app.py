@@ -283,7 +283,8 @@ if uploaded_file:
                 marker=dict(color="red", size=8),
                 name=f"Peaks {col}"
             ))
-            
+         st.plotly_chart(fig, use_container_width=True)   
+        
         # -------- PSD (3-axis) --------
         fig2 = go.Figure()
     
