@@ -502,10 +502,10 @@ if uploaded_file:
     st.sidebar.header("🚨 Anomaly Detection")
     model_choice = st.sidebar.selectbox("Model", ["Isolation Forest","PCA"], index=1)
     if model_choice == "Isolation Forest":
-        contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.01)
+        contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.001)
     else:
         n_components = st.sidebar.slider("Components", 1, 3, 2)
-        contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.01)
+        contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.001)
 
     # -------- AXIS SELECTION --------
     axis_choice = st.sidebar.selectbox("Axis for Anomaly", ["X (40g)","Y (40g)","Z (40g)","All"])
