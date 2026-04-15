@@ -289,8 +289,7 @@ if uploaded_file:
                     marker=dict(color="red"),
                     name=f"{ax} Anomaly"
                 ))
-            # st.plotly_chart(fig, width="stretch")
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
             st.write("Anomalies detected:", len(anomalies))
         else:
             st.info("Run model")
