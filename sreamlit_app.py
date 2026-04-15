@@ -451,7 +451,7 @@ if uploaded_file:
     df = df_full.iloc[int(start_time*fs_auto):int(end_time*fs_auto)]
 
     # -------- FS --------
-    st.sidebar.header("⚙ Sampling Frequency")
+    st.sidebar.header("Sampling Frequency")
     st.sidebar.write(f"Auto fs: {fs_auto:.2f} Hz")
     override_fs = st.sidebar.checkbox("Override FS")
     manual_fs = st.sidebar.number_input("Manual fs", value=fs_auto)
