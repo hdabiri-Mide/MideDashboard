@@ -595,6 +595,3 @@ if uploaded_file:
             st.info("Run model")
 else:
     st.info("Upload file to start")
-
-        st.plotly_chart(fig, width="stretch")
-        st.write("Anomalies detected:", len(anomalies))
