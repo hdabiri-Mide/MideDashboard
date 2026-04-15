@@ -24,7 +24,7 @@
 
 # # ================== PAGE ==================
 # st.set_page_config(layout="wide")
-# st.title("📊 enDAQ SHM Dashboard (Channel 80)")
+# st.title("enDAQ Vibration Signal Dashboard")
 
 # uploaded_file = st.file_uploader("Upload IDE file", type=["ide"])
 
@@ -66,7 +66,6 @@
 # def compute_psd(signal_data, fs):
 #     return welch(signal_data, fs=fs, nperseg=nperseg)
 
-# # Updated detect_peaks function
 # def detect_peaks(freqs, values, height=0.0, distance=20, prominence=0.0):
 #     peaks, _ = find_peaks(values, height=height, distance=distance, prominence=prominence)
 #     return peaks
@@ -81,7 +80,7 @@
 # def compute_rms(df):
 #     return np.sqrt((df[["X (40g)", "Y (40g)", "Z (40g)"]]**2).mean(axis=1))
 
-# # -------- ML --------
+# # ML models
 # def run_if(df, contamination):
 #     model = IsolationForest(contamination=contamination, random_state=42)
 #     df["anomaly"] = model.fit_predict(df[["X (40g)", "Y (40g)", "Z (40g)"]])
@@ -100,7 +99,7 @@
 #     explained = np.sum(pca.explained_variance_ratio_)
 #     return df, explained
 
-# # -------- STFT --------
+# # STFT
 # def compute_stft(signal, fs, window_size, overlap):
 #     step = int(window_size * (1 - overlap/100))
 #     segments = []
@@ -114,7 +113,7 @@
 #     times = np.arange(segments.shape[0]) * (step/fs)
 #     return times, freqs, segments
 
-# # -------- CWT --------
+# # CWT
 # def compute_cwt(signal, fs, wavelet, max_scale):
 #     if not wavelet_available:
 #         return None, None
@@ -144,7 +143,7 @@
 #         fs_auto = 1.0 / dt
 
 #     # ================= SIDEBAR =================
-#     st.sidebar.header("📁 File Info & Time Selection")
+#     st.sidebar.header("File Info & Time Selection")
 #     duration_sec = len(df_full) / fs_auto
 #     st.sidebar.write(f"Total duration: {duration_sec:.2f} s")
 #     st.sidebar.markdown("---")
@@ -158,7 +157,7 @@
 #     df = df_full.iloc[int(start_time*fs_auto):int(end_time*fs_auto)]
 
 #     # -------- FS --------
-#     st.sidebar.header("⚙ Sampling Frequency")
+#     st.sidebar.header("Sampling Frequency")
 #     st.sidebar.write(f"Auto fs: {fs_auto:.2f} Hz")
 #     override_fs = st.sidebar.checkbox("Override FS")
 #     manual_fs = st.sidebar.number_input("Manual fs", value=fs_auto)
@@ -166,12 +165,12 @@
 #     st.sidebar.markdown("---")
 
 #     # -------- MOVING AVG --------
-#     st.sidebar.header("🟢 Moving Average")
+#     st.sidebar.header("Moving Average")
 #     ma_window = st.sidebar.slider("Window", 1, 50, 5)
 #     st.sidebar.markdown("---")
 
 #     # -------- FFT --------
-#     st.sidebar.header("📊 FFT Settings")
+#     st.sidebar.header("FFT Settings")
 #     use_windowing = st.sidebar.checkbox("Windowing")
 #     use_averaging = st.sidebar.checkbox("Averaging")
 #     use_overlap = st.sidebar.checkbox("Overlap")
@@ -192,12 +191,12 @@
 #     st.sidebar.markdown("---")
 
 #     # -------- PSD --------
-#     st.sidebar.header("📈 PSD")
+#     st.sidebar.header("PSD")
 #     nperseg = st.sidebar.slider("nperseg", 128, 4096, 1024)
 #     st.sidebar.markdown("---")
 
 #     # -------- TIME-FREQ --------
-#     st.sidebar.header("🌊 Time-Frequency")
+#     st.sidebar.header("Time-Frequency")
 #     stft_window = st.sidebar.slider("STFT Window", 128, 4096, 512)
 #     stft_overlap = st.sidebar.slider("STFT Overlap %", 0, 90, 50)
 #     if wavelet_available:
@@ -206,13 +205,32 @@
 #     st.sidebar.markdown("---")
 
 #     # -------- MODEL --------
-#     st.sidebar.header("🚨 Anomaly Detection")
+#     st.sidebar.header("Anomaly Detection")
 #     model_choice = st.sidebar.selectbox("Model", ["Isolation Forest","PCA"], index=1)
 #     if model_choice == "Isolation Forest":
-#         contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.01)
+#         # contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.005)
+#         contamination = st.sidebar.slider(
+#             "Contamination",
+#             min_value=0.005,
+#             max_value=0.1,
+#             value=0.005,
+#             step=0.005,
+#             format="%.3f"
+#         )
 #     else:
 #         n_components = st.sidebar.slider("Components", 1, 3, 2)
-#         contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.01)
+#         # contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.005)
+#         contamination = st.sidebar.slider(
+#             "Contamination",
+#             min_value=0.005,
+#             max_value=0.1,
+#             value=0.005,
+#             step=0.005,
+#             format="%.3f"
+#         )
+
+#     # -------- AXIS SELECTION --------
+#     axis_choice = st.sidebar.selectbox("Axis for Anomaly", ["X (40g)","Y (40g)","Z (40g)","All"])
 #     run_button = st.sidebar.button("Run Model")
 #     st.sidebar.markdown("---")
 
@@ -273,20 +291,21 @@
 #     with tab5:
 #         if run_button:
 #             df_an = df.copy()
-#             axis_choice = st.selectbox("Select Axis", ["X (40g)","Y (40g)","Z (40g)"], key="axis_select")
+#             axes_to_plot = ["X (40g)","Y (40g)","Z (40g)"] if axis_choice=="All" else [axis_choice]
 #             if model_choice == "Isolation Forest":
 #                 df_an = run_if(df_an, contamination)
-#                 st.write(f"Mean score ({axis_choice}): {df_an['score'].mean():.4f}")
 #             else:
 #                 df_an, explained = run_pca(df_an, n_components, contamination)
-#                 st.write(f"Explained variance ({axis_choice}): {explained:.3f}")
-#             anomalies = df_an[df_an["anomaly"] == -1]
+#                 st.write(f"Explained variance: {explained:.3f}")
+
+#             anomalies = df_an[df_an["anomaly"]==-1]
 #             fig = go.Figure()
-#             fig.add_trace(go.Scatter(x=df_an.index, y=df_an[axis_choice], name=axis_choice))
-#             fig.add_trace(go.Scatter(x=anomalies.index, y=anomalies[axis_choice],
-#                                      mode="markers", marker=dict(color="red"), name="Anomaly"))
+#             for ax in axes_to_plot:
+#                 fig.add_trace(go.Scatter(x=df_an.index, y=df_an[ax], name=ax))
+#                 fig.add_trace(go.Scatter(x=anomalies.index, y=anomalies[ax],
+#                                          mode="markers", marker=dict(color="red"), name=f"{ax} Anomaly"))
 #             st.plotly_chart(fig, width="stretch")
-#             st.write(f"Anomalies detected ({axis_choice}):", len(anomalies))
+#             st.write("Anomalies detected:", len(anomalies))
 #         else:
 #             st.info("Run model")
 # else:
@@ -305,6 +324,7 @@ import endaq
 
 from scipy.fft import fft
 from scipy.signal import welch, get_window, find_peaks
+from scipy.stats import kurtosis
 from sklearn.ensemble import IsolationForest
 from sklearn.decomposition import PCA
 
@@ -318,7 +338,7 @@ except ModuleNotFoundError:
 
 # ================== PAGE ==================
 st.set_page_config(layout="wide")
-st.title("enDAQ Vibration Signal Dashboard")
+st.title("📊 enDAQ SHM Dashboard (Channel 80)")
 
 uploaded_file = st.file_uploader("Upload IDE file", type=["ide"])
 
@@ -336,29 +356,12 @@ def estimate_fs(time_index):
 
 def apply_fft(signal_data, fs):
     n = len(signal_data)
-    if use_averaging or use_overlap:
-        step = int(window_size * (1 - overlap_factor)) if use_overlap else window_size
-        freqs = np.fft.fftfreq(window_size, 1/fs)[:window_size//2]
-        fft_all = []
-        for start in range(0, n - window_size + 1, step):
-            seg = signal_data[start:start+window_size]
-            if use_windowing:
-                seg = seg * get_window(window_type, window_size)
-            fft_all.append(np.abs(fft(seg)[:window_size//2]))
-        fft_all = np.array(fft_all)
-        if use_averaging:
-            return freqs, np.mean(fft_all, axis=0)
-        else:
-            return freqs, fft_all[0]
-    else:
-        if use_windowing:
-            signal_data = signal_data * get_window(window_type, n)
-        fft_vals = np.abs(fft(signal_data))
-        freqs = np.fft.fftfreq(n, 1/fs)
-        return freqs[:n//2], fft_vals[:n//2]
+    fft_vals = np.abs(fft(signal_data))
+    freqs = np.fft.fftfreq(n, 1/fs)
+    return freqs[:n//2], fft_vals[:n//2]
 
 def compute_psd(signal_data, fs):
-    return welch(signal_data, fs=fs, nperseg=nperseg)
+    return welch(signal_data, fs=fs)
 
 def detect_peaks(freqs, values, height=0.0, distance=20, prominence=0.0):
     peaks, _ = find_peaks(values, height=height, distance=distance, prominence=prominence)
@@ -374,26 +377,47 @@ def plot_histograms(df):
 def compute_rms(df):
     return np.sqrt((df[["X (40g)", "Y (40g)", "Z (40g)"]]**2).mean(axis=1))
 
-# ML models
-def run_if(df, contamination):
-    model = IsolationForest(contamination=contamination, random_state=42)
-    df["anomaly"] = model.fit_predict(df[["X (40g)", "Y (40g)", "Z (40g)"]])
-    df["score"] = model.decision_function(df[["X (40g)", "Y (40g)", "Z (40g)"]])
-    return df
+# -------- FEATURE ENGINEERING --------
+def extract_features(df, fs, window_size=256):
+    features = []
+    for start in range(0, len(df) - window_size, window_size):
+        segment = df.iloc[start:start+window_size]
+        feat = {}
+        for axis in ["X (40g)", "Y (40g)", "Z (40g)"]:
+            sig = segment[axis].values
+            feat[f"{axis}_rms"] = np.sqrt(np.mean(sig**2))
+            feat[f"{axis}_std"] = np.std(sig)
+            feat[f"{axis}_kurt"] = kurtosis(sig)
+            fft_vals = np.abs(np.fft.fft(sig))[:window_size//2]
+            feat[f"{axis}_energy"] = np.sum(fft_vals**2)
+        feat["time_index"] = segment.index[0]
+        features.append(feat)
+    return pd.DataFrame(features)
 
-def run_pca(df, n_components, contamination):
-    X = df[["X (40g)", "Y (40g)", "Z (40g)"]]
+# -------- MODELS --------
+def run_if_features(df_feat, contamination):
+    model = IsolationForest(contamination=contamination, random_state=42)
+    X = df_feat.drop(columns=["time_index"])
+    model.fit(X)
+    scores = model.decision_function(X)
+    threshold = np.percentile(scores, 100 * contamination)
+    df_feat["score"] = scores
+    df_feat["anomaly"] = np.where(scores < threshold, -1, 1)
+    return df_feat
+
+def run_pca_features(df_feat, n_components, contamination):
+    X = df_feat.drop(columns=["time_index"])
     pca = PCA(n_components=n_components)
     X_pca = pca.fit_transform(X)
     X_rec = pca.inverse_transform(X_pca)
     error = np.mean((X - X_rec)**2, axis=1)
-    threshold = np.percentile(error, 100*(1-contamination))
-    df["anomaly"] = np.where(error > threshold, -1, 1)
-    df["score"] = error
+    threshold = np.percentile(error, 100 * (1 - contamination))
+    df_feat["score"] = error
+    df_feat["anomaly"] = np.where(error > threshold, -1, 1)
     explained = np.sum(pca.explained_variance_ratio_)
-    return df, explained
+    return df_feat, explained
 
-# STFT
+# -------- STFT --------
 def compute_stft(signal, fs, window_size, overlap):
     step = int(window_size * (1 - overlap/100))
     segments = []
@@ -407,7 +431,7 @@ def compute_stft(signal, fs, window_size, overlap):
     times = np.arange(segments.shape[0]) * (step/fs)
     return times, freqs, segments
 
-# CWT
+# -------- CWT --------
 def compute_cwt(signal, fs, wavelet, max_scale):
     if not wavelet_available:
         return None, None
@@ -422,125 +446,57 @@ if uploaded_file:
     with tempfile.NamedTemporaryFile(delete=False, suffix=".ide") as tmp:
         tmp.write(uploaded_file.read())
         path = tmp.name
+
     doc = endaq.ide.get_doc(path)
     acc_df = endaq.ide.get_primary_sensor_data(
         doc=doc.channels[80],
         measurement_type="acceleration",
         time_mode="datetime"
     )
+
     acc_df = acc_df - acc_df.median()
     df_full = acc_df.copy()
+
     fs_auto, irregular = estimate_fs(df_full.index)
+
     if irregular:
         dt = 1 / fs_auto
         df_full = df_full.resample(f"{int(dt*1000)}L").mean().interpolate()
         fs_auto = 1.0 / dt
 
     # ================= SIDEBAR =================
-    st.sidebar.header("File Info & Time Selection")
-    duration_sec = len(df_full) / fs_auto
-    st.sidebar.write(f"Total duration: {duration_sec:.2f} s")
-    st.sidebar.markdown("---")
+    st.sidebar.header("⚙ Settings")
 
+    duration_sec = len(df_full) / fs_auto
     start_time = st.sidebar.number_input("Start Time (s)", 0.0, duration_sec, 0.0)
     end_time = st.sidebar.number_input("End Time (s)", 0.0, duration_sec, min(40.0, duration_sec))
-    if end_time - start_time > 40:
-        end_time = start_time + 40
-    st.sidebar.markdown("---")
 
     df = df_full.iloc[int(start_time*fs_auto):int(end_time*fs_auto)]
 
-    # -------- FS --------
-    st.sidebar.header("Sampling Frequency")
-    st.sidebar.write(f"Auto fs: {fs_auto:.2f} Hz")
-    override_fs = st.sidebar.checkbox("Override FS")
-    manual_fs = st.sidebar.number_input("Manual fs", value=fs_auto)
-    fs = manual_fs if override_fs else fs_auto
-    st.sidebar.markdown("---")
+    contamination = st.sidebar.slider(
+        "Contamination",
+        min_value=0.005,
+        max_value=0.1,
+        value=0.005,
+        step=0.005,
+        format="%.3f"
+    )
 
-    # -------- MOVING AVG --------
-    st.sidebar.header("Moving Average")
-    ma_window = st.sidebar.slider("Window", 1, 50, 5)
-    st.sidebar.markdown("---")
+    rms_threshold = st.sidebar.number_input("RMS Threshold", value=0.01)
 
-    # -------- FFT --------
-    st.sidebar.header("FFT Settings")
-    use_windowing = st.sidebar.checkbox("Windowing")
-    use_averaging = st.sidebar.checkbox("Averaging")
-    use_overlap = st.sidebar.checkbox("Overlap")
-    window_type = "hann"
-    window_size = 1024
-    overlap_factor = 0.5
-    if use_windowing:
-        window_type = st.sidebar.selectbox("Window", ["hann","hamming","blackman"])
-    if use_averaging or use_overlap:
-        window_size = st.sidebar.slider("Window Size", 128, 4096, 1024)
-    if use_overlap:
-        overlap_factor = st.sidebar.slider("Overlap", 0.1, 0.9, 0.5)
-    fmin = st.sidebar.number_input("Min Freq", value=0.0)
-    fmax = st.sidebar.number_input("Max Freq", value=50.0)
-    peak_height = st.sidebar.number_input("Peak Height", value=0.0)
-    peak_distance = st.sidebar.slider("Peak Distance", 1, 200, 20)
-    peak_prominence = st.sidebar.number_input("Peak Prominence", value=0.0)
-    st.sidebar.markdown("---")
+    model_choice = st.sidebar.selectbox("Model", ["Isolation Forest","PCA"])
+    n_components = st.sidebar.slider("PCA Components", 1, 3, 2)
 
-    # -------- PSD --------
-    st.sidebar.header("PSD")
-    nperseg = st.sidebar.slider("nperseg", 128, 4096, 1024)
-    st.sidebar.markdown("---")
-
-    # -------- TIME-FREQ --------
-    st.sidebar.header("Time-Frequency")
-    stft_window = st.sidebar.slider("STFT Window", 128, 4096, 512)
-    stft_overlap = st.sidebar.slider("STFT Overlap %", 0, 90, 50)
-    if wavelet_available:
-        wavelet_type = st.sidebar.selectbox("Wavelet", ["morl","cmor","mexh"])
-        max_scale = st.sidebar.slider("Max Scale", 10, 200, 100)
-    st.sidebar.markdown("---")
-
-    # -------- MODEL --------
-    st.sidebar.header("Anomaly Detection")
-    model_choice = st.sidebar.selectbox("Model", ["Isolation Forest","PCA"], index=1)
-    if model_choice == "Isolation Forest":
-        # contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.005)
-        contamination = st.sidebar.slider(
-            "Contamination",
-            min_value=0.005,
-            max_value=0.1,
-            value=0.005,
-            step=0.005,
-            format="%.3f"
-        )
-    else:
-        n_components = st.sidebar.slider("Components", 1, 3, 2)
-        # contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.005)
-        contamination = st.sidebar.slider(
-            "Contamination",
-            min_value=0.005,
-            max_value=0.1,
-            value=0.005,
-            step=0.005,
-            format="%.3f"
-        )
-
-    # -------- AXIS SELECTION --------
-    axis_choice = st.sidebar.selectbox("Axis for Anomaly", ["X (40g)","Y (40g)","Z (40g)","All"])
     run_button = st.sidebar.button("Run Model")
-    st.sidebar.markdown("---")
 
     # ================= TABS =================
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["Time","Stats","FFT/PSD","Time-Frequency","Anomaly"])
 
     # -------- TIME --------
     with tab1:
-        filt = df.copy()
-        for c in ["X (40g)","Y (40g)","Z (40g)"]:
-            filt[c] = filt[c].rolling(ma_window, min_periods=1).mean()
         fig = go.Figure()
         for c in ["X (40g)","Y (40g)","Z (40g)"]:
-            fig.add_trace(go.Scatter(x=df.index, y=df[c], name=f"{c} Raw"))
-            fig.add_trace(go.Scatter(x=filt.index, y=filt[c], name=f"{c} MA"))
-        fig.add_trace(go.Scatter(x=df.index, y=compute_rms(df), name="RMS", line=dict(color="black", dash="dash")))
+            fig.add_trace(go.Scatter(x=df.index, y=df[c], name=c))
         st.plotly_chart(fig, width="stretch")
 
     # -------- STATS --------
@@ -552,55 +508,47 @@ if uploaded_file:
     with tab3:
         fig = go.Figure()
         for c in ["X (40g)","Y (40g)","Z (40g)"]:
-            f, vals = apply_fft(df[c].values, fs)
-            mask = (f >= fmin) & (f <= fmax)
-            peaks = detect_peaks(f[mask], vals[mask], height=peak_height,
-                                 distance=peak_distance, prominence=peak_prominence)
-            fig.add_trace(go.Scatter(x=f[mask], y=vals[mask], name=c))
-            fig.add_trace(go.Scatter(x=f[mask][peaks], y=vals[mask][peaks],
-                                     mode="markers", marker=dict(color="red"), name=f"{c} Peaks"))
+            f, vals = apply_fft(df[c].values, fs_auto)
+            fig.add_trace(go.Scatter(x=f, y=vals, name=c))
         st.plotly_chart(fig, width="stretch")
-        fig2 = go.Figure()
-        for c in ["X (40g)","Y (40g)","Z (40g)"]:
-            f, Pxx = compute_psd(df[c].values, fs)
-            mask = (f >= fmin) & (f <= fmax)
-            fig2.add_trace(go.Scatter(x=f[mask], y=Pxx[mask], name=c))
-        fig2.update_layout(yaxis_type="log")
-        st.plotly_chart(fig2, width="stretch")
 
-    # -------- TIME-FREQUENCY --------
+    # -------- TIME-FREQ --------
     with tab4:
         signal = df["X (40g)"].values
-        t_stft, f_stft, Z = compute_stft(signal, fs, stft_window, stft_overlap)
-        fig = go.Figure(data=go.Heatmap(z=Z.T, x=t_stft, y=f_stft, colorscale="Viridis"))
+        t_stft, f_stft, Z = compute_stft(signal, fs_auto, 512, 50)
+        fig = go.Figure(data=go.Heatmap(z=Z.T, x=t_stft, y=f_stft))
         st.plotly_chart(fig, width="stretch")
-        if wavelet_available:
-            f_cwt, power = compute_cwt(signal, fs, wavelet_type, max_scale)
-            fig2 = go.Figure(data=go.Heatmap(z=power, x=np.arange(len(signal))/fs, y=f_cwt, colorscale="Turbo"))
-            st.plotly_chart(fig2, width="stretch")
-        else:
-            st.info("Wavelet analysis unavailable (PyWavelets not installed)")
 
     # -------- ANOMALY --------
     with tab5:
         if run_button:
-            df_an = df.copy()
-            axes_to_plot = ["X (40g)","Y (40g)","Z (40g)"] if axis_choice=="All" else [axis_choice]
+            df_feat = extract_features(df, fs_auto)
+
+            rms_cols = [c for c in df_feat.columns if "rms" in c]
+            df_feat["rms_mean"] = df_feat[rms_cols].mean(axis=1)
+
+            df_feat = df_feat[df_feat["rms_mean"] > rms_threshold]
+
             if model_choice == "Isolation Forest":
-                df_an = run_if(df_an, contamination)
+                df_feat = run_if_features(df_feat, contamination)
             else:
-                df_an, explained = run_pca(df_an, n_components, contamination)
+                df_feat, explained = run_pca_features(df_feat, n_components, contamination)
                 st.write(f"Explained variance: {explained:.3f}")
 
-            anomalies = df_an[df_an["anomaly"]==-1]
+            anomalies = df_feat[df_feat["anomaly"] == -1]
+
             fig = go.Figure()
-            for ax in axes_to_plot:
-                fig.add_trace(go.Scatter(x=df_an.index, y=df_an[ax], name=ax))
-                fig.add_trace(go.Scatter(x=anomalies.index, y=anomalies[ax],
-                                         mode="markers", marker=dict(color="red"), name=f"{ax} Anomaly"))
+            fig.add_trace(go.Scatter(x=df.index, y=df["X (40g)"], name="Signal"))
+
+            fig.add_trace(go.Scatter(
+                x=anomalies["time_index"],
+                y=[df["X (40g)"].loc[t] for t in anomalies["time_index"]],
+                mode="markers",
+                marker=dict(color="red", size=8),
+                name="Anomalies"
+            ))
+
             st.plotly_chart(fig, width="stretch")
             st.write("Anomalies detected:", len(anomalies))
         else:
             st.info("Run model")
-else:
-    st.info("Upload file to start")
