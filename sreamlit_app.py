@@ -299,13 +299,13 @@
 
 # # ################################# Rev 2
 # ################################# Rev 1
+# ################################# Rev 1
 # ================== IMPORTS ==================
 import streamlit as st
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 import plotly.graph_objects as go
+import plotly.express as px
 import tempfile
 import endaq
 
@@ -369,19 +369,6 @@ def compute_psd(signal_data, fs):
     return welch(signal_data, fs=fs, nperseg=nperseg)
 
 
-def detect_peaks(freqs, values, height=0.0, distance=20, prominence=0.0):
-    peaks, _ = find_peaks(values, height=height, distance=distance, prominence=prominence)
-    return peaks
-
-
-def plot_histograms(df):
-    fig, ax = plt.subplots(1, 3, figsize=(15, 4))
-    for i, col in enumerate(["X (40g)", "Y (40g)", "Z (40g)"]):
-        sns.histplot(df[col], bins=50, kde=True, ax=ax[i])
-        ax[i].set_title(col)
-    st.pyplot(fig)
-
-
 def compute_rms(df):
     return np.sqrt((df[["X (40g)", "Y (40g)", "Z (40g)"]]**2).mean(axis=1))
 
@@ -424,15 +411,6 @@ def compute_stft(signal, fs, window_size, overlap):
     return times, freqs, segments
 
 
-def compute_cwt(signal, fs, wavelet, max_scale):
-    if not wavelet_available:
-        return None, None
-    scales = np.arange(1, max_scale)
-    coeffs, freqs = pywt.cwt(signal, scales, wavelet, sampling_period=1/fs)
-    power = np.abs(coeffs)
-    return freqs, power
-
-
 # ================== MAIN ==================
 if uploaded_file:
 
@@ -460,27 +438,23 @@ if uploaded_file:
 
     # ================= SIDEBAR =================
     st.sidebar.header("File Info & Time Selection")
-    duration_sec = len(df_full) / fs_auto
-    st.sidebar.write(f"Total duration: {duration_sec:.2f} s")
-    st.sidebar.markdown("---")
 
+    duration_sec = len(df_full) / fs_auto
     start_time = st.sidebar.number_input("Start Time (s)", 0.0, duration_sec, 0.0)
     end_time = st.sidebar.number_input("End Time (s)", 0.0, duration_sec, min(40.0, duration_sec))
 
-    if end_time - start_time > 40:
-        end_time = start_time + 40
-
     df = df_full.iloc[int(start_time*fs_auto):int(end_time*fs_auto)]
 
-    st.sidebar.header("Sampling Frequency")
+    # FS
     override_fs = st.sidebar.checkbox("Override FS")
     manual_fs = st.sidebar.number_input("Manual fs", value=fs_auto)
     fs = manual_fs if override_fs else fs_auto
 
-    st.sidebar.header("FFT Settings")
+    # FFT settings
     use_windowing = st.sidebar.checkbox("Windowing")
     use_averaging = st.sidebar.checkbox("Averaging")
     use_overlap = st.sidebar.checkbox("Overlap")
+
     window_type = "hann"
     window_size = 1024
     overlap_factor = 0.5
@@ -492,17 +466,7 @@ if uploaded_file:
     if use_overlap:
         overlap_factor = st.sidebar.slider("Overlap", 0.1, 0.9, 0.5)
 
-    fmin = st.sidebar.number_input("Min Freq", value=0.0)
-    fmax = st.sidebar.number_input("Max Freq", value=50.0)
-
-    nperseg = st.sidebar.slider("nperseg", 128, 4096, 1024)
-
-    stft_window = st.sidebar.slider("STFT Window", 128, 4096, 512)
-    stft_overlap = st.sidebar.slider("STFT Overlap %", 0, 90, 50)
-
-    if wavelet_available:
-        wavelet_type = st.sidebar.selectbox("Wavelet", ["morl","cmor","mexh"])
-        max_scale = st.sidebar.slider("Max Scale", 10, 200, 100)
+    nperseg = st.sidebar.slider("PSD nperseg", 128, 4096, 1024)
 
     model_choice = st.sidebar.selectbox("Model", ["Isolation Forest","PCA"], index=1)
 
@@ -518,54 +482,63 @@ if uploaded_file:
 
     run_button = st.sidebar.button("Run Model")
 
-    # ================= PRECOMPUTE (FIX) =================
+    # ================= PRECOMPUTE =================
     signal_x = df["X (40g)"].values
 
     freqs_fft, fft_vals = apply_fft(signal_x, fs)
     freqs_psd, psd_vals = compute_psd(signal_x, fs)
-    t_stft, f_stft, stft = compute_stft(signal_x, fs, stft_window, stft_overlap)
     rms = compute_rms(df)
+
+    # STFT
+    stft_window = 512
+    stft_overlap = 50
+
+    t_stft, f_stft, stft = compute_stft(signal_x, fs, stft_window, stft_overlap)
 
     # ================= TABS =================
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["Time","Stats","FFT/PSD","Time-Frequency","Anomaly"])
 
-    # -------- TAB 1 --------
+    # -------- TAB 1 TIME --------
     with tab1:
-        st.subheader("Time Series")
-        fig, ax = plt.subplots()
-        ax.plot(df.index, df["X (40g)"], label="X")
-        ax.plot(df.index, df["Y (40g)"], label="Y")
-        ax.plot(df.index, df["Z (40g)"], label="Z")
-        ax.legend()
-        st.pyplot(fig)
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=df.index, y=df["X (40g)"], name="X"))
+        fig.add_trace(go.Scatter(x=df.index, y=df["Y (40g)"], name="Y"))
+        fig.add_trace(go.Scatter(x=df.index, y=df["Z (40g)"], name="Z"))
+        st.plotly_chart(fig, use_container_width=True)
 
-    # -------- TAB 2 --------
+    # -------- TAB 2 STATS --------
     with tab2:
-        st.subheader("Stats")
         st.write(df.describe())
-        plot_histograms(df)
 
-    # -------- TAB 3 --------
+        fig = px.histogram(df, x="X (40g)", nbins=50, title="X Histogram")
+        st.plotly_chart(fig, use_container_width=True)
+
+        fig = px.histogram(df, x="Y (40g)", nbins=50, title="Y Histogram")
+        st.plotly_chart(fig, use_container_width=True)
+
+        fig = px.histogram(df, x="Z (40g)", nbins=50, title="Z Histogram")
+        st.plotly_chart(fig, use_container_width=True)
+
+    # -------- TAB 3 FFT / PSD --------
     with tab3:
-        st.subheader("FFT")
-        fig, ax = plt.subplots()
-        ax.plot(freqs_fft, fft_vals)
-        ax.set_xlim(fmin, fmax)
-        st.pyplot(fig)
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=freqs_fft, y=fft_vals, name="FFT"))
+        st.plotly_chart(fig, use_container_width=True)
 
-        st.subheader("PSD")
-        fig, ax = plt.subplots()
-        ax.plot(freqs_psd, psd_vals)
-        st.pyplot(fig)
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=freqs_psd, y=psd_vals, name="PSD"))
+        st.plotly_chart(fig, use_container_width=True)
 
-    # -------- TAB 4 --------
+    # -------- TAB 4 STFT --------
     with tab4:
-        st.subheader("STFT")
-        fig, ax = plt.subplots()
-        ax.imshow(stft.T, aspect="auto", origin="lower")
-        st.pyplot(fig)
+        fig = go.Figure(data=go.Heatmap(
+            z=stft,
+            x=f_stft,
+            y=t_stft
+        ))
+        st.plotly_chart(fig, use_container_width=True)
 
-    # -------- TAB 5 --------
+    # -------- TAB 5 ANOMALY --------
     with tab5:
         if run_button:
             df_an = df.copy()
@@ -584,19 +557,20 @@ if uploaded_file:
             anomalies = df_an[df_an["anomaly"] == -1]
 
             fig = go.Figure()
-            for ax_name in axes_to_plot:
-                fig.add_trace(go.Scatter(x=df_an.index, y=df_an[ax_name], name=ax_name))
+            for ax in axes_to_plot:
+                fig.add_trace(go.Scatter(x=df_an.index, y=df_an[ax], name=ax))
                 fig.add_trace(go.Scatter(
                     x=anomalies.index,
-                    y=anomalies[ax_name],
+                    y=anomalies[ax],
                     mode="markers",
                     marker=dict(color="red"),
-                    name=f"{ax_name} Anomaly"
+                    name=f"{ax} anomaly"
                 ))
 
             st.plotly_chart(fig, use_container_width=True)
             st.write("Anomalies detected:", len(anomalies))
         else:
             st.info("Run model")
+
 else:
     st.info("Upload file to start")
