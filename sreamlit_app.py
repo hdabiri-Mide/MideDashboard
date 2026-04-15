@@ -218,14 +218,61 @@ if uploaded_file:
         fig.update_layout(title="Time Series", height=500)
         st.plotly_chart(fig, use_container_width=True)
 
+    # # ================= TAB 2: STATS =================
+    # with tab2:
+    #     fig = go.Figure()
+    #     for col in ["X (40g)", "Y (40g)", "Z (40g)"]:
+    #         fig.add_trace(go.Histogram(x=df[col], name=col, opacity=0.6))
+    #     fig.update_layout(barmode="overlay", title="Histograms")
+    #     st.plotly_chart(fig, use_container_width=True)
     # ================= TAB 2: STATS =================
     with tab2:
+        # -------- Histograms --------
         fig = go.Figure()
         for col in ["X (40g)", "Y (40g)", "Z (40g)"]:
             fig.add_trace(go.Histogram(x=df[col], name=col, opacity=0.6))
+    
         fig.update_layout(barmode="overlay", title="Histograms")
         st.plotly_chart(fig, use_container_width=True)
-
+    
+        # -------- STATISTICAL METRICS TABLE --------
+        stats = pd.DataFrame({
+            "Axis": ["X (40g)", "Y (40g)", "Z (40g)"],
+            "Mean": [
+                df["X (40g)"].mean(),
+                df["Y (40g)"].mean(),
+                df["Z (40g)"].mean()
+            ],
+            "Std": [
+                df["X (40g)"].std(),
+                df["Y (40g)"].std(),
+                df["Z (40g)"].std()
+            ],
+            "RMS": [
+                np.sqrt(np.mean(df["X (40g)"]**2)),
+                np.sqrt(np.mean(df["Y (40g)"]**2)),
+                np.sqrt(np.mean(df["Z (40g)"]**2))
+            ],
+            "Min": [
+                df["X (40g)"].min(),
+                df["Y (40g)"].min(),
+                df["Z (40g)"].min()
+            ],
+            "Max": [
+                df["X (40g)"].max(),
+                df["Y (40g)"].max(),
+                df["Z (40g)"].max()
+            ],
+            "Peak-to-Peak": [
+                df["X (40g)"].max() - df["X (40g)"].min(),
+                df["Y (40g)"].max() - df["Y (40g)"].min(),
+                df["Z (40g)"].max() - df["Z (40g)"].min()
+            ]
+        })
+    
+        st.subheader("Statistical Metrics")
+        st.dataframe(stats, use_container_width=True)
+    
     # ================= TAB 3: FFT / PSD =================
     with tab3:
         # -------- FFT (3-axis) --------
