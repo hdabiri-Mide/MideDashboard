@@ -21,7 +21,7 @@ try:
     wavelet_available = True
 except ModuleNotFoundError:
     wavelet_available = False
-    st.warning("PyWavelets not installed → Wavelet analysis disabled")
+    # st.warning("PyWavelets not installed → Wavelet analysis disabled")
 
 # ================== PAGE ==================
 st.set_page_config(layout="wide")
