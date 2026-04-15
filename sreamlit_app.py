@@ -218,13 +218,6 @@ if uploaded_file:
         fig.update_layout(title="Time Series", height=500)
         st.plotly_chart(fig, use_container_width=True)
 
-    # # ================= TAB 2: STATS =================
-    # with tab2:
-    #     fig = go.Figure()
-    #     for col in ["X (40g)", "Y (40g)", "Z (40g)"]:
-    #         fig.add_trace(go.Histogram(x=df[col], name=col, opacity=0.6))
-    #     fig.update_layout(barmode="overlay", title="Histograms")
-    #     st.plotly_chart(fig, use_container_width=True)
     # ================= TAB 2: STATS =================
     with tab2:
         # -------- Histograms --------
@@ -275,30 +268,7 @@ if uploaded_file:
     
     # ================= TAB 3: FFT / PSD =================
     with tab3:
-        # -------- FFT (3-axis) --------
-        # fig = go.Figure()
-    
-        # for col in ["X (40g)", "Y (40g)", "Z (40g)"]:
-        #     sig = df[col].values
-        #     freqs, fft_vals = apply_fft(sig, fs)
-    
-        #     fig.add_trace(go.Scatter(
-        #         x=freqs,
-        #         y=fft_vals,
-        #         mode="lines",
-        #         name=f"FFT {col}"
-        #     ))
-    
-        # fig.update_layout(
-        #     title="FFT Spectrum (X, Y, Z)",
-        #     xaxis_title="Frequency (Hz)",
-        #     yaxis_title="Amplitude",
-        #     height=500
-        # )
-    
-        # st.plotly_chart(fig, use_container_width=True)
-
-
+        
         # -------- FFT (3-axis) --------
         fig = go.Figure()
 
