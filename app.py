@@ -67,7 +67,7 @@ nperseg = st.sidebar.slider("nperseg", 128, 4096, 1024)
 
 # -------- ANOMALY --------
 st.sidebar.subheader("Anomaly Detection")
-contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.01)
+contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.001)
 
 # ================== FILE ==================
 uploaded_file = st.file_uploader("Upload IDE file", type=["ide"])
