@@ -528,7 +528,7 @@ if uploaded_file:
     rms_percentile = st.sidebar.slider(
         "RMS Threshold Percentile",
         min_value=0,
-        max_value=50,
+        max_value=80,
         value=10,
         step=1
     )
