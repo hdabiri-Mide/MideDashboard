@@ -223,6 +223,7 @@ if uploaded_file:
 
     # ================= TAB 3: FFT / PSD =================
     with tab3:
+        # -------- FFT (3-axis) --------
         fig = go.Figure()
     
         for col in ["X (40g)", "Y (40g)", "Z (40g)"]:
@@ -233,7 +234,7 @@ if uploaded_file:
                 x=freqs,
                 y=fft_vals,
                 mode="lines",
-                name=col
+                name=f"FFT {col}"
             ))
     
         fig.update_layout(
@@ -244,6 +245,29 @@ if uploaded_file:
         )
     
         st.plotly_chart(fig, use_container_width=True)
+    
+        # -------- PSD (3-axis) --------
+        fig2 = go.Figure()
+    
+        for col in ["X (40g)", "Y (40g)", "Z (40g)"]:
+            sig = df[col].values
+            psd_freq, psd_vals = compute_psd(sig, fs)
+    
+            fig2.add_trace(go.Scatter(
+                x=psd_freq,
+                y=psd_vals,
+                mode="lines",
+                name=f"PSD {col}"
+            ))
+    
+        fig2.update_layout(
+            title="Power Spectral Density (X, Y, Z)",
+            xaxis_title="Frequency (Hz)",
+            yaxis_title="Power",
+            height=500
+        )
+    
+        st.plotly_chart(fig2, use_container_width=True)
     # ================= TAB 4: TIME-FREQUENCY =================
     with tab4:
         sig = df["X (40g)"].values
