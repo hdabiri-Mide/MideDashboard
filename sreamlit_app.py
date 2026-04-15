@@ -83,8 +83,18 @@
 # # ML models
 # def run_if(df, contamination):
 #     model = IsolationForest(contamination=contamination, random_state=42)
-#     df["anomaly"] = model.fit_predict(df[["X (40g)", "Y (40g)", "Z (40g)"]])
-#     df["score"] = model.decision_function(df[["X (40g)", "Y (40g)", "Z (40g)"]])
+
+#     X = df[["X (40g)", "Y (40g)", "Z (40g)"]]
+
+#     model.fit(X)
+#     scores = model.decision_function(X)
+
+#     # -------- CHANGE 2: score-based threshold --------
+#     threshold = np.percentile(scores, contamination * 100)
+
+#     df["score"] = scores
+#     df["anomaly"] = np.where(scores < threshold, -1, 1)
+
 #     return df
 
 # def run_pca(df, n_components, contamination):
@@ -208,24 +218,23 @@
 #     st.sidebar.header("Anomaly Detection")
 #     model_choice = st.sidebar.selectbox("Model", ["Isolation Forest","PCA"], index=1)
 #     if model_choice == "Isolation Forest":
-#         # contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.005)
+#         # -------- CHANGE 1: smaller contamination --------
 #         contamination = st.sidebar.slider(
 #             "Contamination",
-#             min_value=0.005,
+#             min_value=0.001,
 #             max_value=0.1,
-#             value=0.005,
-#             step=0.005,
+#             value=0.001,
+#             step=0.001,
 #             format="%.3f"
 #         )
 #     else:
 #         n_components = st.sidebar.slider("Components", 1, 3, 2)
-#         # contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.005)
 #         contamination = st.sidebar.slider(
 #             "Contamination",
-#             min_value=0.005,
+#             min_value=0.001,
 #             max_value=0.1,
-#             value=0.005,
-#             step=0.005,
+#             value=0.001,
+#             step=0.001,
 #             format="%.3f"
 #         )
 
@@ -237,61 +246,18 @@
 #     # ================= TABS =================
 #     tab1, tab2, tab3, tab4, tab5 = st.tabs(["Time","Stats","FFT/PSD","Time-Frequency","Anomaly"])
 
-#     # -------- TIME --------
-#     with tab1:
-#         filt = df.copy()
-#         for c in ["X (40g)","Y (40g)","Z (40g)"]:
-#             filt[c] = filt[c].rolling(ma_window, min_periods=1).mean()
-#         fig = go.Figure()
-#         for c in ["X (40g)","Y (40g)","Z (40g)"]:
-#             fig.add_trace(go.Scatter(x=df.index, y=df[c], name=f"{c} Raw"))
-#             fig.add_trace(go.Scatter(x=filt.index, y=filt[c], name=f"{c} MA"))
-#         fig.add_trace(go.Scatter(x=df.index, y=compute_rms(df), name="RMS", line=dict(color="black", dash="dash")))
-#         st.plotly_chart(fig, width="stretch")
-
-#     # -------- STATS --------
-#     with tab2:
-#         st.dataframe(df.describe())
-#         plot_histograms(df)
-
-#     # -------- FFT / PSD --------
-#     with tab3:
-#         fig = go.Figure()
-#         for c in ["X (40g)","Y (40g)","Z (40g)"]:
-#             f, vals = apply_fft(df[c].values, fs)
-#             mask = (f >= fmin) & (f <= fmax)
-#             peaks = detect_peaks(f[mask], vals[mask], height=peak_height,
-#                                  distance=peak_distance, prominence=peak_prominence)
-#             fig.add_trace(go.Scatter(x=f[mask], y=vals[mask], name=c))
-#             fig.add_trace(go.Scatter(x=f[mask][peaks], y=vals[mask][peaks],
-#                                      mode="markers", marker=dict(color="red"), name=f"{c} Peaks"))
-#         st.plotly_chart(fig, width="stretch")
-#         fig2 = go.Figure()
-#         for c in ["X (40g)","Y (40g)","Z (40g)"]:
-#             f, Pxx = compute_psd(df[c].values, fs)
-#             mask = (f >= fmin) & (f <= fmax)
-#             fig2.add_trace(go.Scatter(x=f[mask], y=Pxx[mask], name=c))
-#         fig2.update_layout(yaxis_type="log")
-#         st.plotly_chart(fig2, width="stretch")
-
-#     # -------- TIME-FREQUENCY --------
-#     with tab4:
-#         signal = df["X (40g)"].values
-#         t_stft, f_stft, Z = compute_stft(signal, fs, stft_window, stft_overlap)
-#         fig = go.Figure(data=go.Heatmap(z=Z.T, x=t_stft, y=f_stft, colorscale="Viridis"))
-#         st.plotly_chart(fig, width="stretch")
-#         if wavelet_available:
-#             f_cwt, power = compute_cwt(signal, fs, wavelet_type, max_scale)
-#             fig2 = go.Figure(data=go.Heatmap(z=power, x=np.arange(len(signal))/fs, y=f_cwt, colorscale="Turbo"))
-#             st.plotly_chart(fig2, width="stretch")
-#         else:
-#             st.info("Wavelet analysis unavailable (PyWavelets not installed)")
-
 #     # -------- ANOMALY --------
 #     with tab5:
 #         if run_button:
 #             df_an = df.copy()
+
+#             # -------- CHANGE 3: RMS deadband --------
+#             rms = compute_rms(df_an)
+#             rms_threshold = np.percentile(rms, 10)
+#             df_an = df_an[rms > rms_threshold]
+
 #             axes_to_plot = ["X (40g)","Y (40g)","Z (40g)"] if axis_choice=="All" else [axis_choice]
+
 #             if model_choice == "Isolation Forest":
 #                 df_an = run_if(df_an, contamination)
 #             else:
@@ -299,11 +265,17 @@
 #                 st.write(f"Explained variance: {explained:.3f}")
 
 #             anomalies = df_an[df_an["anomaly"]==-1]
+
 #             fig = go.Figure()
 #             for ax in axes_to_plot:
 #                 fig.add_trace(go.Scatter(x=df_an.index, y=df_an[ax], name=ax))
-#                 fig.add_trace(go.Scatter(x=anomalies.index, y=anomalies[ax],
-#                                          mode="markers", marker=dict(color="red"), name=f"{ax} Anomaly"))
+#                 fig.add_trace(go.Scatter(
+#                     x=anomalies.index,
+#                     y=anomalies[ax],
+#                     mode="markers",
+#                     marker=dict(color="red"),
+#                     name=f"{ax} Anomaly"
+#                 ))
 #             st.plotly_chart(fig, width="stretch")
 #             st.write("Anomalies detected:", len(anomalies))
 #         else:
@@ -551,6 +523,17 @@ if uploaded_file:
             format="%.3f"
         )
 
+    # -------- RMS FILTER --------
+    st.sidebar.header("RMS Deadband")
+    rms_percentile = st.sidebar.slider(
+        "RMS Threshold Percentile",
+        min_value=0,
+        max_value=50,
+        value=10,
+        step=1
+    )
+    st.sidebar.markdown("---")
+
     # -------- AXIS SELECTION --------
     axis_choice = st.sidebar.selectbox("Axis for Anomaly", ["X (40g)","Y (40g)","Z (40g)","All"])
     run_button = st.sidebar.button("Run Model")
@@ -566,7 +549,8 @@ if uploaded_file:
 
             # -------- CHANGE 3: RMS deadband --------
             rms = compute_rms(df_an)
-            rms_threshold = np.percentile(rms, 10)
+            # rms_threshold = np.percentile(rms, 10)
+            rms_threshold = np.percentile(rms, rms_percentile)
             df_an = df_an[rms > rms_threshold]
 
             axes_to_plot = ["X (40g)","Y (40g)","Z (40g)"] if axis_choice=="All" else [axis_choice]
