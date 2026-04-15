@@ -318,7 +318,7 @@ except ModuleNotFoundError:
 
 # ================== PAGE ==================
 st.set_page_config(layout="wide")
-st.title("📊 enDAQ SHM Dashboard (Channel 80)")
+st.title("enDAQ Vibration Signal Dashboard")
 
 uploaded_file = st.file_uploader("Upload IDE file", type=["ide"])
 
@@ -437,7 +437,7 @@ if uploaded_file:
         fs_auto = 1.0 / dt
 
     # ================= SIDEBAR =================
-    st.sidebar.header("📁 File Info & Time Selection")
+    st.sidebar.header("File Info & Time Selection")
     duration_sec = len(df_full) / fs_auto
     st.sidebar.write(f"Total duration: {duration_sec:.2f} s")
     st.sidebar.markdown("---")
@@ -459,12 +459,12 @@ if uploaded_file:
     st.sidebar.markdown("---")
 
     # -------- MOVING AVG --------
-    st.sidebar.header("🟢 Moving Average")
+    st.sidebar.header("Moving Average")
     ma_window = st.sidebar.slider("Window", 1, 50, 5)
     st.sidebar.markdown("---")
 
     # -------- FFT --------
-    st.sidebar.header("📊 FFT Settings")
+    st.sidebar.header("FFT Settings")
     use_windowing = st.sidebar.checkbox("Windowing")
     use_averaging = st.sidebar.checkbox("Averaging")
     use_overlap = st.sidebar.checkbox("Overlap")
@@ -485,12 +485,12 @@ if uploaded_file:
     st.sidebar.markdown("---")
 
     # -------- PSD --------
-    st.sidebar.header("📈 PSD")
+    st.sidebar.header("PSD")
     nperseg = st.sidebar.slider("nperseg", 128, 4096, 1024)
     st.sidebar.markdown("---")
 
     # -------- TIME-FREQ --------
-    st.sidebar.header("🌊 Time-Frequency")
+    st.sidebar.header("Time-Frequency")
     stft_window = st.sidebar.slider("STFT Window", 128, 4096, 512)
     stft_overlap = st.sidebar.slider("STFT Overlap %", 0, 90, 50)
     if wavelet_available:
@@ -499,7 +499,7 @@ if uploaded_file:
     st.sidebar.markdown("---")
 
     # -------- MODEL --------
-    st.sidebar.header("🚨 Anomaly Detection")
+    st.sidebar.header("Anomaly Detection")
     model_choice = st.sidebar.selectbox("Model", ["Isolation Forest","PCA"], index=1)
     if model_choice == "Isolation Forest":
         # contamination = st.sidebar.slider("Contamination", 0.001, 0.1, 0.005)
