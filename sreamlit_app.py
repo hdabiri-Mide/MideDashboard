@@ -508,7 +508,8 @@ if uploaded_file:
             min_value=0.005,
             max_value=0.1,
             value=0.005,
-            step=0.005
+            step=0.005,
+            format="%.3f"
         )
     else:
         n_components = st.sidebar.slider("Components", 1, 3, 2)
@@ -518,7 +519,8 @@ if uploaded_file:
             min_value=0.005,
             max_value=0.1,
             value=0.005,
-            step=0.005
+            step=0.005,
+            format="%.3f"
         )
 
     # -------- AXIS SELECTION --------
