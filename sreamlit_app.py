@@ -178,6 +178,11 @@ if uploaded_file:
     fmin = st.sidebar.number_input("Min Freq", value=0.0)
     fmax = st.sidebar.number_input("Max Freq", value=50.0)
 
+    st.sidebar.header("FFT Peak Detection")
+    peak_height = st.sidebar.number_input("Peak Height", value=0.0)
+    peak_distance = st.sidebar.slider("Peak Distance", 1, 200, 20)
+    peak_prominence = st.sidebar.number_input("Peak Prominence", value=0.0)
+
     st.sidebar.header("PSD")
     nperseg = st.sidebar.slider("nperseg", 128, 4096, 1024)
 
@@ -224,28 +229,61 @@ if uploaded_file:
     # ================= TAB 3: FFT / PSD =================
     with tab3:
         # -------- FFT (3-axis) --------
-        fig = go.Figure()
+        # fig = go.Figure()
     
+        # for col in ["X (40g)", "Y (40g)", "Z (40g)"]:
+        #     sig = df[col].values
+        #     freqs, fft_vals = apply_fft(sig, fs)
+    
+        #     fig.add_trace(go.Scatter(
+        #         x=freqs,
+        #         y=fft_vals,
+        #         mode="lines",
+        #         name=f"FFT {col}"
+        #     ))
+    
+        # fig.update_layout(
+        #     title="FFT Spectrum (X, Y, Z)",
+        #     xaxis_title="Frequency (Hz)",
+        #     yaxis_title="Amplitude",
+        #     height=500
+        # )
+    
+        # st.plotly_chart(fig, use_container_width=True)
+
+
+        # -------- FFT (3-axis) --------
+        fig = go.Figure()
+
         for col in ["X (40g)", "Y (40g)", "Z (40g)"]:
             sig = df[col].values
             freqs, fft_vals = apply_fft(sig, fs)
-    
+
+            # ---- FFT line ----
             fig.add_trace(go.Scatter(
                 x=freqs,
                 y=fft_vals,
                 mode="lines",
                 name=f"FFT {col}"
             ))
-    
-        fig.update_layout(
-            title="FFT Spectrum (X, Y, Z)",
-            xaxis_title="Frequency (Hz)",
-            yaxis_title="Amplitude",
-            height=500
-        )
-    
-        st.plotly_chart(fig, use_container_width=True)
-    
+
+            # ---- PEAK DETECTION (NEW) ----
+            peaks = detect_peaks(
+                freqs,
+                fft_vals,
+                height=peak_height,
+                distance=peak_distance,
+                prominence=peak_prominence
+            )
+
+            fig.add_trace(go.Scatter(
+                x=freqs[peaks],
+                y=fft_vals[peaks],
+                mode="markers",
+                marker=dict(color="red", size=8),
+                name=f"Peaks {col}"
+            ))
+            
         # -------- PSD (3-axis) --------
         fig2 = go.Figure()
     
