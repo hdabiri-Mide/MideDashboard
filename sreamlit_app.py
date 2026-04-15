@@ -223,20 +223,27 @@ if uploaded_file:
 
     # ================= TAB 3: FFT / PSD =================
     with tab3:
-        sig = df["X (40g)"].values
-        freqs, fft_vals = apply_fft(sig, fs)
-
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=freqs, y=fft_vals, name="FFT (X)"))
-        fig.update_layout(title="FFT Spectrum")
+    
+        for col in ["X (40g)", "Y (40g)", "Z (40g)"]:
+            sig = df[col].values
+            freqs, fft_vals = apply_fft(sig, fs)
+    
+            fig.add_trace(go.Scatter(
+                x=freqs,
+                y=fft_vals,
+                mode="lines",
+                name=col
+            ))
+    
+        fig.update_layout(
+            title="FFT Spectrum (X, Y, Z)",
+            xaxis_title="Frequency (Hz)",
+            yaxis_title="Amplitude",
+            height=500
+        )
+    
         st.plotly_chart(fig, use_container_width=True)
-
-        psd_freq, psd_vals = compute_psd(sig, fs)
-        fig2 = go.Figure()
-        fig2.add_trace(go.Scatter(x=psd_freq, y=psd_vals, name="PSD"))
-        fig2.update_layout(title="PSD")
-        st.plotly_chart(fig2, use_container_width=True)
-
     # ================= TAB 4: TIME-FREQUENCY =================
     with tab4:
         sig = df["X (40g)"].values
