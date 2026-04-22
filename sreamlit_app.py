@@ -408,7 +408,7 @@ st.set_page_config(
 ACCENT   = "#00C9A7"   # teal-green
 ACCENT2  = "#845EF7"   # soft violet for secondary traces
 BG_CARD  = "#1A1D2E"
-BG_DARK  = "#A9A9A9" #"#0F1117"
+BG_DARK  = "#0F1117"
 TEXT     = "#E8ECF4"
 MUTED    = "#6B7280"
 RED      = "#FF6B6B"
