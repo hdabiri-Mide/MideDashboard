@@ -779,7 +779,7 @@ with col_title:
     st.markdown("# enDAQ Vibration Dashboard")
     st.markdown(
         f'<span style="color:{MUTED};font-size:0.78rem;letter-spacing:0.06em;">'
-        'enDAQ · Signal Analysis · Anomaly Detection</span>',
+        'enDAQ · Signal Processing · Anomaly Detection</span>',
         unsafe_allow_html=True
     )
 with col_upload:
