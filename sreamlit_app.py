@@ -783,7 +783,7 @@ with col_title:
         unsafe_allow_html=True
     )
 with col_upload:
-    uploaded_file = st.file_uploader("Upload IDE file", type=["ide"], label_visibility="collapsed")
+    uploaded_file = st.file_uploader("Upload IDE file", type=["ide"])#, label_visibility="collapsed")##########################################
 
 st.markdown("<hr style='border:none;border-top:1px solid #1F2437;margin:0.5rem 0 1.2rem 0'>",
             unsafe_allow_html=True)
