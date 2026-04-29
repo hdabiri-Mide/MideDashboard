@@ -920,7 +920,8 @@ if uploaded_file:
         fig = go.Figure()
         for i, col in enumerate(["X (40g)", "Y (40g)", "Z (40g)"]):
             fig.add_trace(go.Scatter(
-                x=df.index, y=df[col], name=col,
+                # x=df.index, y=df[col], name=col,
+                y=df[col], name=col,
                 line=dict(color=TRACE_COLORS[i], width=1),
                 mode="lines"
             ))
