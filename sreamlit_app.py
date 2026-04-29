@@ -1077,16 +1077,13 @@ if uploaded_file:
                 fig = go.Figure()
                 for i, ax in enumerate(axes_to_plot):
                     fig.add_trace(go.Scatter(
-                        # x=df_an.index, y=df_an[ax],
-                        x = np.arange(len(df_an)), y=df_an[ax],
+                        x=df_an.index, y=df_an[ax],
                         name=ax, mode="lines",
                         line=dict(color=TRACE_COLORS[i], width=1)
                     ))
                     if len(anomalies):
                         fig.add_trace(go.Scatter(
-                            # x=anomalies.index, y=anomalies[ax],
-                            x=x[df_an["anomaly"] == -1],
-                            y=df_an.loc[df_an["anomaly"] == -1, axis],
+                            x=anomalies.index, y=anomalies[ax],
                             mode="markers", name=f"{ax} anomaly",
                             marker=dict(color=RED, size=5,
                                         line=dict(color="white", width=0.8))
