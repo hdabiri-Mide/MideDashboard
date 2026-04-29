@@ -926,7 +926,7 @@ if uploaded_file:
                 mode="lines"
             ))
         fig.update_layout(title="Acceleration — Time Series",
-                          xaxis_title="Time", yaxis_title="Acceleration (g)")
+                          xaxis_title="Time index", yaxis_title="Acceleration (g)")
         plotly_chart(fig)
 
     # ── TAB 2: STATS ─────────────────────────────────────────────
