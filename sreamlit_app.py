@@ -1073,7 +1073,7 @@ if uploaded_file:
                     unsafe_allow_html=True
                 )
 
-            with col_b:https://github.com/hdabiri-Mide/MideDashboard/blob/main/sreamlit_app.py
+            with col_b:
                 fig = go.Figure()
                 for i, ax in enumerate(axes_to_plot):
                     fig.add_trace(go.Scatter(
