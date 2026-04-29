@@ -1073,7 +1073,7 @@ if uploaded_file:
                     unsafe_allow_html=True
                 )
 
-            with col_b:
+            with col_b:https://github.com/hdabiri-Mide/MideDashboard/blob/main/sreamlit_app.py
                 fig = go.Figure()
                 for i, ax in enumerate(axes_to_plot):
                     fig.add_trace(go.Scatter(
@@ -1084,7 +1084,9 @@ if uploaded_file:
                     ))
                     if len(anomalies):
                         fig.add_trace(go.Scatter(
-                            x=anomalies.index, y=anomalies[ax],
+                            # x=anomalies.index, y=anomalies[ax],
+                            x=x[df_an["anomaly"] == -1],
+                            y=df_an.loc[df_an["anomaly"] == -1, axis],
                             mode="markers", name=f"{ax} anomaly",
                             marker=dict(color=RED, size=5,
                                         line=dict(color="white", width=0.8))
