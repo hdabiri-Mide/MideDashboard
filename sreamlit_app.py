@@ -1077,7 +1077,8 @@ if uploaded_file:
                 fig = go.Figure()
                 for i, ax in enumerate(axes_to_plot):
                     fig.add_trace(go.Scatter(
-                        x=df_an.index, y=df_an[ax],
+                        # x=df_an.index, y=df_an[ax],
+                        y=df_an[ax],
                         name=ax, mode="lines",
                         line=dict(color=TRACE_COLORS[i], width=1)
                     ))
@@ -1088,7 +1089,7 @@ if uploaded_file:
                             marker=dict(color=RED, size=5,
                                         line=dict(color="white", width=0.8))
                         ))
-                fig.update_layout(xaxis_title="Time", yaxis_title="Acceleration (g)")
+                fig.update_layout(xaxis_title="Time index", yaxis_title="Acceleration (g)")
                 plotly_chart(fig)
 
         else:
