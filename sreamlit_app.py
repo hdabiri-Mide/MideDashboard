@@ -1077,7 +1077,8 @@ if uploaded_file:
                 fig = go.Figure()
                 for i, ax in enumerate(axes_to_plot):
                     fig.add_trace(go.Scatter(
-                        x=df_an.index, y=df_an[ax],
+                        # x=df_an.index, y=df_an[ax],
+                        x = np.arange(len(df_an)), y=df_an[ax],
                         name=ax, mode="lines",
                         line=dict(color=TRACE_COLORS[i], width=1)
                     ))
