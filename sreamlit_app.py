@@ -1062,6 +1062,8 @@ if uploaded_file:
                     unsafe_allow_html=True
                 )
 
+            df_an = df_an.reset_index(drop=True)    
+
             anomalies = df_an[df_an["anomaly"] == -1]
 
             # Anomaly count metric
