@@ -787,7 +787,7 @@ with col_logo:
     )
     st.image("enDAQLOGO.JPG", width=300)
     st.markdown("</div>", unsafe_allow_html=True)
-    # st.image("enDAQLOGO.JPG", width=250)
+    # st.image("enDAQLOGO2.JPG", width=250)
     # st.markdown("</div>", unsafe_allow_html=True)
 
 with col_title:
