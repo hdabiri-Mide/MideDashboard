@@ -774,7 +774,13 @@ def compute_stft(signal, fs, window_size, overlap):
 
 
 # ================== HEADER ==================
-col_title, col_upload = st.columns([2, 3], gap="large")
+# col_title, col_upload = st.columns([2, 3], gap="large")
+
+col_logo, col_title, col_upload = st.columns([1, 2, 3], gap="large")
+
+with col_logo:
+    st.image("logo.png", width=120)
+
 with col_title:
     st.markdown("# enDAQ Vibration Dashboard")
     st.markdown(
@@ -879,7 +885,7 @@ if uploaded_file:
         model_choice = st.selectbox("Model", ["Isolation Forest", "PCA"], index=1, label_visibility="collapsed")
         tip("Contamination", "Expected fraction of anomalies in the data. A higher value flags more points as anomalous. Typical range: 0.001–0.05.")
         contamination = st.slider("Contamination", 0.001, 0.1, 0.001, 0.001, format="%.3f", label_visibility="collapsed")
-        tip("RMS Threshold %ile", "Pre-filter: only keep time-windows whose RMS exceeds this percentile of the overall RMS distribution. Removes near-zero (idle) segments before anomaly detection.")
+        tip("RMS Threshold %", "Pre-filter: only keep time-windows whose RMS exceeds this percentile of the overall RMS distribution. Removes near-zero (idle) segments before anomaly detection.")
         rms_percentile = st.slider("RMS Threshold %ile", 0, 80, 10, label_visibility="collapsed")
         tip("Axis", "Which acceleration axis to display in the anomaly plot. 'All' overlays all three axes.")
         axis_choice = st.selectbox("Axis", ["X (40g)", "Y (40g)", "Z (40g)", "All"], label_visibility="collapsed")
