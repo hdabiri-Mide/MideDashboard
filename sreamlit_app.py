@@ -779,7 +779,7 @@ def compute_stft(signal, fs, window_size, overlap):
 col_logo, col_title, col_upload = st.columns([1, 2, 3], gap="large")
 
 with col_logo:
-    st.image("logo.png", width=120)
+    st.image("enDAQLOGO.jpg", width=120)
 
 with col_title:
     st.markdown("# enDAQ Vibration Dashboard")
