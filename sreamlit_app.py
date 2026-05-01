@@ -781,11 +781,11 @@ col_logo, col_title, col_upload = st.columns([1, 2, 3], gap="large")
 with col_logo:
     st.markdown(
     """
-    <div style="margin-top: 30px;">
+    <div style="margin-top: 35px;">
     """,
     unsafe_allow_html=True
     )
-    st.image("enDAQLOGO.JPG", width=250)
+    st.image("enDAQLOGO.JPG", width=300)
     st.markdown("</div>", unsafe_allow_html=True)
     # st.image("enDAQLOGO.JPG", width=250)
     # st.markdown("</div>", unsafe_allow_html=True)
