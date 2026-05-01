@@ -657,12 +657,20 @@ html, body, [data-testid="stAppViewContainer"] {{
 }}
 
 /* ---- Main title ---- */
+# h1 {{
+#     font-family: 'Syne', sans-serif !important;
+#     font-weight: 800 !important;
+#     color: {TEXT} !important;
+#     letter-spacing: -0.02em !important;
+# }}
+
 h1 {{
-    font-family: 'Syne', sans-serif !important;
-    font-weight: 800 !important;
+    font-family: 'Arial', sans-serif !important;
+    font-weight: 700 !important;
     color: {TEXT} !important;
-    letter-spacing: -0.02em !important;
+    # letter-spacing: 0 !important;
 }}
+
 </style>
 """, unsafe_allow_html=True)
 
