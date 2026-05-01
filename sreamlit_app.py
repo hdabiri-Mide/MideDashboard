@@ -781,9 +781,7 @@ col_logo, col_title, col_upload = st.columns([1, 2, 3], gap="large")
 from PIL import Image
 
 with col_logo:
-    st.image("enDAQLOGO.JPG", width=250)
-    # logo = Image.open("enDAQLOGO.JPG")
-    # st.image(logo, width=120)
+    st.image("enDAQLOGO.JPG", width=400)
 
 with col_title:
     st.markdown("# enDAQ Vibration Dashboard")
