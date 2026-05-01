@@ -781,7 +781,7 @@ col_logo, col_title, col_upload = st.columns([1, 2, 3], gap="large")
 from PIL import Image
 
 with col_logo:
-    st.image("enDAQLOGO.jpg", width=120)
+    st.image("enDAQLOGO.JPG", width=120)
     # logo = Image.open("enDAQLOGO.JPG")
     # st.image(logo, width=120)
 
