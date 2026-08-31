@@ -136,11 +136,9 @@ html, body, [data-testid="stAppViewContainer"] {{
 }}
 
 
-
 /* ---- Tabs ---- */
 
-/* Tab container */
-[data-testid="stTabs"] [data-baseweb="tab-list"] {{
+.stTabs [data-baseweb="tab-list"] {{
     background: {BG_CARD} !important;
     border-radius: 10px !important;
     padding: 4px !important;
@@ -148,46 +146,46 @@ html, body, [data-testid="stAppViewContainer"] {{
     border: 1px solid #1F2437 !important;
 }}
 
-/* Every tab */
-[data-testid="stTabs"] [data-baseweb="tab"] {{
+/* Unselected tabs */
+.stTabs [data-baseweb="tab"] {{
     background: transparent !important;
     color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
     font-family: 'DM Mono', monospace !important;
     font-size: 0.78rem !important;
+    font-weight: 400 !important;
     letter-spacing: 0.04em !important;
     border-radius: 7px !important;
     padding: 6px 16px !important;
     border: none !important;
 }}
 
-/* EVERY element inside every tab */
-[data-testid="stTabs"] [data-baseweb="tab"] * {{
-    color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
-}}
-
 /* Selected tab */
-[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] {{
+.stTabs [data-baseweb="tab"][aria-selected="true"] {{
     background: {ACCENT} !important;
-    color: #FFFFFF !important;
-}}
-
-/* Selected tab — every child element */
-[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] * {{
     color: #FFFFFF !important;
     -webkit-text-fill-color: #FFFFFF !important;
     font-weight: 700 !important;
 }}
 
-/* Tab text specifically */
-[data-testid="stTabs"] [data-baseweb="tab"] p {{
+/* Tab labels */
+.stTabs [data-baseweb="tab"] [data-testid="stMarkdownContainer"] {{
     color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
 }}
 
-[data-testid="stTabs"] [data-baseweb="tab"] div {{
+.stTabs [data-baseweb="tab"] [data-testid="stMarkdownContainer"] p {{
     color: #FFFFFF !important;
     -webkit-text-fill-color: #FFFFFF !important;
+    font-family: 'DM Mono', monospace !important;
+    font-size: 0.78rem !important;
+}}
+
+/* Selected tab label */
+.stTabs [data-baseweb="tab"][aria-selected="true"]
+[data-testid="stMarkdownContainer"] p {{
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    font-weight: 700 !important;
 }}
 
 
@@ -327,6 +325,36 @@ h1 {{
     font-weight: 700 !important;
     color: {TEXT} !important;
     # letter-spacing: 0 !important;
+}}
+
+
+/* ===== FINAL TAB OVERRIDE ===== */
+
+.stTabs [role="tab"] {{
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+}}
+
+.stTabs [role="tab"] *,
+.stTabs [role="tab"] p,
+.stTabs [role="tab"] span,
+.stTabs [role="tab"] div {{
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+}}
+
+.stTabs [role="tab"][aria-selected="true"] {{
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    background: {ACCENT} !important;
+}}
+
+.stTabs [role="tab"][aria-selected="true"] *,
+.stTabs [role="tab"][aria-selected="true"] p,
+.stTabs [role="tab"][aria-selected="true"] span,
+.stTabs [role="tab"][aria-selected="true"] div {{
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
 }}
 
 </style>
