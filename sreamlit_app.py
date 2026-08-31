@@ -163,34 +163,51 @@ html, body, [data-testid="stAppViewContainer"] {{
 # }}
 
 /* ---- Tabs ---- */
-[data-baseweb="tab-list"] {{
-    background: {BG_CARD} !important;
+[data-baseweb="tab-list"] {
+    background: #1A1D2E !important;
     border-radius: 10px !important;
     padding: 4px !important;
-    gap: 2px;
-    border: 1px solid #1F2437;
-}}
+    gap: 2px !important;
+    border: 1px solid #1F2437 !important;
+}
 
-[data-baseweb="tab"] {{
-    background: transparent !important;
+/* Force the tab itself AND every child element to white */
+[data-baseweb="tab"],
+[data-baseweb="tab"] *,
+[data-baseweb="tab"] > div,
+[data-baseweb="tab"] > div > div,
+[data-baseweb="tab"] span,
+[data-baseweb="tab"] p {
     color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    opacity: 1 !important;
+}
+
+[data-baseweb="tab"] {
+    background: transparent !important;
     font-family: 'DM Mono', monospace !important;
     font-size: 0.78rem !important;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.04em !important;
     border-radius: 7px !important;
     padding: 6px 16px !important;
     border: none !important;
-    transition: all 0.15s ease;
-}}
+}
 
-/* Tab label text */
-[data-baseweb="tab"] > div {{
+/* Selected tab */
+[data-baseweb="tab"][aria-selected="true"] {
+    background: #00C9A7 !important;
     color: #FFFFFF !important;
-}}
+}
 
-[data-baseweb="tab"] span {{
+/* Keep selected tab text white */
+[data-baseweb="tab"][aria-selected="true"] *,
+[data-baseweb="tab"][aria-selected="true"] span,
+[data-baseweb="tab"][aria-selected="true"] p {
     color: #FFFFFF !important;
-}}
+    -webkit-text-fill-color: #FFFFFF !important;
+    opacity: 1 !important;
+}
+
 
 /* Selected tab */
 [aria-selected="true"][data-baseweb="tab"] {{
