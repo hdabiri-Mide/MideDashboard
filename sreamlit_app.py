@@ -488,6 +488,7 @@ html, body, [data-testid="stAppViewContainer"] {{
 .stButton > button {{
     background: {ACCENT} !important;
     color: #0F1117 !important;
+    # color: #FFFFFF !important;
     border: none !important;
     border-radius: 6px !important;
     font-family: 'Syne', sans-serif !important;
@@ -506,7 +507,8 @@ html, body, [data-testid="stAppViewContainer"] {{
     background: {BG_CARD} !important;
     border: 1.5px dashed {ACCENT} !important;
     border-radius: 10px !important;
-    color: {MUTED} !important;
+    # color: {MUTED} !important;
+    color: #FFFFFF !important;
 }}
 
 /* ---- Tabs ---- */
@@ -519,7 +521,8 @@ html, body, [data-testid="stAppViewContainer"] {{
 }}
 [data-baseweb="tab"] {{
     background: transparent !important;
-    color: {MUTED} !important;
+    # color: {MUTED} !important;
+    color: #FFFFFF !important;
     font-family: 'DM Mono', monospace !important;
     font-size: 0.78rem !important;
     letter-spacing: 0.04em;
@@ -531,6 +534,7 @@ html, body, [data-testid="stAppViewContainer"] {{
 [aria-selected="true"][data-baseweb="tab"] {{
     background: {ACCENT} !important;
     color: #0F1117 !important;
+    # color: #FFFFFF !important;
     font-weight: 700 !important;
 }}
 
