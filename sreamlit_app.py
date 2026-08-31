@@ -97,7 +97,7 @@ html, body, [data-testid="stAppViewContainer"] {{
 # }}
 
 [data-testid="stSidebar"] [data-baseweb="input"] input {{
-    background: #0F1117 !important;
+    background: #FFFFFF !important;
     border-color: #2A2F45 !important;
     color: #000000 !important;
     -webkit-text-fill-color: #000000 !important;
