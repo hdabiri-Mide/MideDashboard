@@ -176,7 +176,8 @@ html, body, [data-testid="stAppViewContainer"] {{
 
 
 /* ---- Tabs ---- */
-[data-baseweb="tab-list"] {{
+
+.stTabs [data-baseweb="tab-list"] {{
     background: {BG_CARD} !important;
     border-radius: 10px !important;
     padding: 4px !important;
@@ -184,7 +185,8 @@ html, body, [data-testid="stAppViewContainer"] {{
     border: 1px solid #1F2437 !important;
 }}
 
-[data-baseweb="tab"] {{
+/* Tab button */
+.stTabs button[data-baseweb="tab"] {{
     background: transparent !important;
     color: #FFFFFF !important;
     font-family: 'DM Mono', monospace !important;
@@ -195,39 +197,27 @@ html, body, [data-testid="stAppViewContainer"] {{
     border: none !important;
 }}
 
-/* ===== FORCE TAB LABEL COLOR ===== */
-[data-baseweb="tab"] p {{
-    color: #FFFFFF !important;
-}}
-
-[data-baseweb="tab"] div {{
-    color: #FFFFFF !important;
-}}
-
-[data-baseweb="tab"] span {{
-    color: #FFFFFF !important;
-}}
-
-[data-baseweb="tab"] label {{
-    color: #FFFFFF !important;
-}}
-
-[data-baseweb="tab"] * {{
+/* >>> THIS IS THE IMPORTANT PART <<< */
+/* Actual text inside the tab */
+.stTabs button[data-baseweb="tab"] [data-testid="stMarkdownContainer"] p {{
     color: #FFFFFF !important;
     -webkit-text-fill-color: #FFFFFF !important;
+    font-family: 'DM Mono', monospace !important;
+    font-size: 0.78rem !important;
 }}
 
-/* ===== SELECTED TAB ===== */
-[data-baseweb="tab"][aria-selected="true"] {{
+/* Selected tab */
+.stTabs button[data-baseweb="tab"][aria-selected="true"] {{
     background: {ACCENT} !important;
     color: #FFFFFF !important;
 }}
 
-[data-baseweb="tab"][aria-selected="true"] p,
-[data-baseweb="tab"][aria-selected="true"] div,
-[data-baseweb="tab"][aria-selected="true"] span {{
+/* Selected tab text */
+.stTabs button[data-baseweb="tab"][aria-selected="true"] 
+[data-testid="stMarkdownContainer"] p {{
     color: #FFFFFF !important;
     -webkit-text-fill-color: #FFFFFF !important;
+    font-weight: 700 !important;
 }}
 
 
