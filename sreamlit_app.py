@@ -135,44 +135,6 @@ html, body, [data-testid="stAppViewContainer"] {{
     color: #FFFFFF !important;
 }}
 
-# /* ---- Tabs ---- */
-# [data-baseweb="tab-list"] {{
-#     background: {BG_CARD} !important;
-#     border-radius: 10px !important;
-#     padding: 4px !important;
-#     gap: 2px;
-#     border: 1px solid #1F2437;
-# }}
-# [data-baseweb="tab"] {{
-#     background: transparent !important;
-#     # color: {MUTED} !important;
-#     color: #FFFFFF !important;
-#     font-family: 'DM Mono', monospace !important;
-#     font-size: 0.78rem !important;
-#     letter-spacing: 0.04em;
-#     border-radius: 7px !important;
-#     padding: 6px 16px !important;
-#     border: none !important;
-#     transition: all 0.15s ease;
-# }}
-# [aria-selected="true"][data-baseweb="tab"] {{
-#     background: {ACCENT} !important;
-#     color: #0F1117 !important;
-#     # color: #FFFFFF !important;
-#     font-weight: 700 !important;
-# }}
-
-# /* Selected tab */
-# [aria-selected="true"][data-baseweb="tab"] {{
-#     background: {ACCENT} !important;
-#     color: #FFFFFF !important;
-#     font-weight: 700 !important;
-# }}
-
-# [aria-selected="true"][data-baseweb="tab"] > div,
-# [aria-selected="true"][data-baseweb="tab"] span {{
-#     color: #FFFFFF !important;
-# }}
 
 
 /* ---- Tabs ---- */
