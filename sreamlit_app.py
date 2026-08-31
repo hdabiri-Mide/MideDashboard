@@ -174,18 +174,16 @@ html, body, [data-testid="stAppViewContainer"] {{
 #     color: #FFFFFF !important;
 # }}
 
-
 /* ---- Tabs ---- */
-[data-baseweb="tab-list"] {
+[data-baseweb="tab-list"] {{
     background: {BG_CARD} !important;
     border-radius: 10px !important;
     padding: 4px !important;
     gap: 2px;
     border: 1px solid #1F2437;
-}
+}}
 
-/* All tab text */
-[data-baseweb="tab"] {
+[data-baseweb="tab"] {{
     background: transparent !important;
     color: #FFFFFF !important;
     font-family: 'DM Mono', monospace !important;
@@ -194,28 +192,29 @@ html, body, [data-testid="stAppViewContainer"] {{
     border-radius: 7px !important;
     padding: 6px 16px !important;
     border: none !important;
-}
+}}
 
-/* Force text inside tabs to white */
+/* Force the actual tab text to white */
 [data-baseweb="tab"] *,
-[data-baseweb="tab"] > div,
-[data-baseweb="tab"] span {
+[data-baseweb="tab"] span,
+[data-baseweb="tab"] > div {{
     color: #FFFFFF !important;
-}
+}}
 
 /* Selected tab */
-[data-baseweb="tab"][aria-selected="true"] {
+[data-baseweb="tab"][aria-selected="true"] {{
     background: {ACCENT} !important;
     color: #FFFFFF !important;
     font-weight: 700 !important;
-}
+}}
 
-/* Force selected tab's inner text to white */
+/* Force selected tab text to white */
 [data-baseweb="tab"][aria-selected="true"] *,
-[data-baseweb="tab"][aria-selected="true"] > div,
-[data-baseweb="tab"][aria-selected="true"] span {
+[data-baseweb="tab"][aria-selected="true"] span,
+[data-baseweb="tab"][aria-selected="true"] > div {{
     color: #FFFFFF !important;
-}
+}}
+
 
 
 /* ---- Dataframe / table ---- */
