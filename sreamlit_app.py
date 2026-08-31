@@ -147,7 +147,7 @@ html, body, [data-testid="stAppViewContainer"] {{
 [data-baseweb="select"] div {{
     background: #0F1117 !important;
     border-color: #2A2F45 !important;
-    color: {TEXT} !important;
+    color: #000000 !important;
 }}
 
 /* ---- Buttons ---- */
