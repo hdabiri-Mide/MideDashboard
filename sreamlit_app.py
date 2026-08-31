@@ -89,11 +89,18 @@ html, body, [data-testid="stAppViewContainer"] {{
 [data-testid="stSlider"] > div > div > div > div {{
     background: {ACCENT} !important;
 }}
-[data-baseweb="input"] input,
-[data-baseweb="select"] div {{
+# [data-baseweb="input"] input,
+# [data-baseweb="select"] div {{
+#     background: #0F1117 !important;
+#     border-color: #2A2F45 !important;
+#     color: {TEXT} !important;
+# }}
+
+[data-testid="stSidebar"] [data-baseweb="input"] input {{
     background: #0F1117 !important;
     border-color: #2A2F45 !important;
-    color: {TEXT} !important;
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
 }}
 
 /* ---- Buttons ---- */
