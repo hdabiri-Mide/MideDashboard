@@ -98,39 +98,76 @@ html, body, [data-testid="stAppViewContainer"] {{
 # }}
 
 
+# /* ---- Sidebar ---- */
+# [data-testid="stSidebar"] {{
+#     background: {BG_CARD} !important;
+#     border-right: 1px solid #1F2437;
+# }}
+
+# /* Sidebar text — labels/headings */
+# [data-testid="stSidebar"] * {{
+#     font-family: 'DM Mono', monospace !important;
+#     font-size: 0.82rem !important;
+#     color: {TEXT} !important;
+# }}
+
+# /* ---- Sliders & inputs ---- */
+# [data-testid="stSlider"] > div > div > div > div {{
+#     background: {ACCENT} !important;
+# }}
+
+# /* Number input box */
+# [data-testid="stSidebar"] [data-baseweb="input"] {{
+#     background: #FFFFFF !important;
+# }}
+
+# /* Number input VALUE */
+# [data-testid="stSidebar"] [data-baseweb="input"] input {{
+#     background: #FFFFFF !important;
+#     color: #000000 !important;
+#     -webkit-text-fill-color: #000000 !important;
+#     opacity: 1 !important;
+# }}
+
+# /* Number input +/- buttons */
+# [data-testid="stSidebar"] [data-baseweb="input"] button {{
+#     color: #FFFFFF !important;
+#     -webkit-text-fill-color: #FFFFFF !important;
+# }}
+
 /* ---- Sidebar ---- */
 [data-testid="stSidebar"] {{
     background: {BG_CARD} !important;
     border-right: 1px solid #1F2437;
 }}
 
-/* Sidebar text — labels/headings */
 [data-testid="stSidebar"] * {{
     font-family: 'DM Mono', monospace !important;
     font-size: 0.82rem !important;
     color: {TEXT} !important;
 }}
 
-/* ---- Sliders & inputs ---- */
+/* ---- Sliders ---- */
 [data-testid="stSlider"] > div > div > div > div {{
     background: {ACCENT} !important;
 }}
 
-/* Number input box */
-[data-testid="stSidebar"] [data-baseweb="input"] {{
-    background: #FFFFFF !important;
+/* ---- Number input boxes ---- */
+[data-testid="stSidebar"] [data-testid="stNumberInput"] input {{
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    opacity: 1 !important;
+    font-weight: 400 !important;
 }}
 
-/* Number input VALUE */
-[data-testid="stSidebar"] [data-baseweb="input"] input {{
-    background: #FFFFFF !important;
+[data-testid="stSidebar"] [data-testid="stNumberInput"] input[type="number"] {{
     color: #000000 !important;
     -webkit-text-fill-color: #000000 !important;
     opacity: 1 !important;
 }}
 
-/* Number input +/- buttons */
-[data-testid="stSidebar"] [data-baseweb="input"] button {{
+[data-testid="stSidebar"] [data-testid="stNumberInput"] button {{
     color: #FFFFFF !important;
     -webkit-text-fill-color: #FFFFFF !important;
 }}
