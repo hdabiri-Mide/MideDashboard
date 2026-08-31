@@ -78,11 +78,18 @@ html, body, [data-testid="stAppViewContainer"] {{
     background: {BG_CARD} !important;
     border-right: 1px solid #1F2437;
 }}
+# [data-testid="stSidebar"] * {{
+#     font-family: 'DM Mono', monospace !important;
+#     font-size: 0.82rem !important;
+#     color: {TEXT} !important;
+# }}
+
 [data-testid="stSidebar"] * {{
     font-family: 'DM Mono', monospace !important;
     font-size: 0.82rem !important;
-    color: {TEXT} !important;
+    color: #000000 !important;
 }}
+
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
 [data-testid="stSidebar"] h3 {{
