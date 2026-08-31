@@ -139,7 +139,8 @@ html, body, [data-testid="stAppViewContainer"] {{
 
 /* ---- Tabs ---- */
 
-.stTabs [data-baseweb="tab-list"] {{
+/* Tab container */
+[data-testid="stTabs"] [data-baseweb="tab-list"] {{
     background: {BG_CARD} !important;
     border-radius: 10px !important;
     padding: 4px !important;
@@ -147,8 +148,8 @@ html, body, [data-testid="stAppViewContainer"] {{
     border: 1px solid #1F2437 !important;
 }}
 
-/* Tab button */
-.stTabs button[data-baseweb="tab"] {{
+/* Every tab */
+[data-testid="stTabs"] [data-baseweb="tab"] {{
     background: transparent !important;
     color: #FFFFFF !important;
     font-family: 'DM Mono', monospace !important;
@@ -159,27 +160,34 @@ html, body, [data-testid="stAppViewContainer"] {{
     border: none !important;
 }}
 
-/* >>> THIS IS THE IMPORTANT PART <<< */
-/* Actual text inside the tab */
-.stTabs button[data-baseweb="tab"] [data-testid="stMarkdownContainer"] p {{
+/* EVERY element inside every tab */
+[data-testid="stTabs"] [data-baseweb="tab"] * {{
     color: #FFFFFF !important;
     -webkit-text-fill-color: #FFFFFF !important;
-    font-family: 'DM Mono', monospace !important;
-    font-size: 0.78rem !important;
 }}
 
 /* Selected tab */
-.stTabs button[data-baseweb="tab"][aria-selected="true"] {{
+[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] {{
     background: {ACCENT} !important;
     color: #FFFFFF !important;
 }}
 
-/* Selected tab text */
-.stTabs button[data-baseweb="tab"][aria-selected="true"] 
-[data-testid="stMarkdownContainer"] p {{
+/* Selected tab — every child element */
+[data-testid="stTabs"] [data-baseweb="tab"][aria-selected="true"] * {{
     color: #FFFFFF !important;
     -webkit-text-fill-color: #FFFFFF !important;
     font-weight: 700 !important;
+}}
+
+/* Tab text specifically */
+[data-testid="stTabs"] [data-baseweb="tab"] p {{
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+}}
+
+[data-testid="stTabs"] [data-baseweb="tab"] div {{
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
 }}
 
 
