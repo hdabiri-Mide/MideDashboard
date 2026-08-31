@@ -174,13 +174,14 @@ html, body, [data-testid="stAppViewContainer"] {{
 #     color: #FFFFFF !important;
 # }}
 
+
 /* ---- Tabs ---- */
 [data-baseweb="tab-list"] {{
     background: {BG_CARD} !important;
     border-radius: 10px !important;
     padding: 4px !important;
-    gap: 2px;
-    border: 1px solid #1F2437;
+    gap: 2px !important;
+    border: 1px solid #1F2437 !important;
 }}
 
 [data-baseweb="tab"] {{
@@ -188,31 +189,45 @@ html, body, [data-testid="stAppViewContainer"] {{
     color: #FFFFFF !important;
     font-family: 'DM Mono', monospace !important;
     font-size: 0.78rem !important;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.04em !important;
     border-radius: 7px !important;
     padding: 6px 16px !important;
     border: none !important;
 }}
 
-/* Force the actual tab text to white */
-[data-baseweb="tab"] *,
-[data-baseweb="tab"] span,
-[data-baseweb="tab"] > div {{
+/* ===== FORCE TAB LABEL COLOR ===== */
+[data-baseweb="tab"] p {{
     color: #FFFFFF !important;
 }}
 
-/* Selected tab */
+[data-baseweb="tab"] div {{
+    color: #FFFFFF !important;
+}}
+
+[data-baseweb="tab"] span {{
+    color: #FFFFFF !important;
+}}
+
+[data-baseweb="tab"] label {{
+    color: #FFFFFF !important;
+}}
+
+[data-baseweb="tab"] * {{
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+}}
+
+/* ===== SELECTED TAB ===== */
 [data-baseweb="tab"][aria-selected="true"] {{
     background: {ACCENT} !important;
     color: #FFFFFF !important;
-    font-weight: 700 !important;
 }}
 
-/* Force selected tab text to white */
-[data-baseweb="tab"][aria-selected="true"] *,
-[data-baseweb="tab"][aria-selected="true"] span,
-[data-baseweb="tab"][aria-selected="true"] > div {{
+[data-baseweb="tab"][aria-selected="true"] p,
+[data-baseweb="tab"][aria-selected="true"] div,
+[data-baseweb="tab"][aria-selected="true"] span {{
     color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
 }}
 
 
