@@ -162,6 +162,18 @@ html, body, [data-testid="stAppViewContainer"] {{
 #     font-weight: 700 !important;
 # }}
 
+# /* Selected tab */
+# [aria-selected="true"][data-baseweb="tab"] {{
+#     background: {ACCENT} !important;
+#     color: #FFFFFF !important;
+#     font-weight: 700 !important;
+# }}
+
+# [aria-selected="true"][data-baseweb="tab"] > div,
+# [aria-selected="true"][data-baseweb="tab"] span {{
+#     color: #FFFFFF !important;
+# }}
+
 /* ---- Tabs ---- */
 [data-baseweb="tab-list"] {
     background: #1A1D2E !important;
@@ -207,19 +219,6 @@ html, body, [data-testid="stAppViewContainer"] {{
     -webkit-text-fill-color: #FFFFFF !important;
     opacity: 1 !important;
 }
-
-
-/* Selected tab */
-[aria-selected="true"][data-baseweb="tab"] {{
-    background: {ACCENT} !important;
-    color: #FFFFFF !important;
-    font-weight: 700 !important;
-}}
-
-[aria-selected="true"][data-baseweb="tab"] > div,
-[aria-selected="true"][data-baseweb="tab"] span {{
-    color: #FFFFFF !important;
-}}
 
 /* ---- Dataframe / table ---- */
 [data-testid="stDataFrame"] {{
