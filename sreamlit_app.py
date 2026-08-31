@@ -85,60 +85,6 @@ html, body, [data-testid="stAppViewContainer"] {{
     color: {TEXT} !important;
 }}
 
-# [data-testid="stSidebar"] * {{
-#     font-family: 'DM Mono', monospace !important;
-#     font-size: 0.82rem !important;
-#     color: #000000 !important;
-# }}
-
-# /* ---- Sidebar ---- */
-# [data-testid="stSidebar"] {{
-#     background: {BG_CARD} !important;
-#     border-right: 1px solid #1F2437;
-# }}
-
-# [data-testid="stSidebar"] * {{
-#     font-family: 'DM Mono', monospace !important;
-#     font-size: 0.82rem !important;
-#     color: #000000 !important;
-# }}
-
-# /* Sidebar section headings */
-# [data-testid="stSidebar"] h1,
-# [data-testid="stSidebar"] h2,
-# [data-testid="stSidebar"] h3,
-# [data-testid="stSidebar"] h1 *,
-# [data-testid="stSidebar"] h2 *,
-# [data-testid="stSidebar"] h3 * {{
-#     color: {ACCENT} !important;
-#     font-family: 'Syne', sans-serif !important;
-#     font-size: 0.75rem !important;
-#     letter-spacing: 0.08em !important;
-#     text-transform: uppercase;
-# }}
-
-# [data-testid="stSidebar"] h1,
-# [data-testid="stSidebar"] h2,
-# [data-testid="stSidebar"] h3 {{
-#     border-bottom: 1px solid #1F2437;
-#     padding-bottom: 4px;
-#     margin-top: 1rem !important;
-# }}
-
-
-# [data-testid="stSidebar"] h1,
-# [data-testid="stSidebar"] h2,
-# [data-testid="stSidebar"] h3 {{
-#     color: {ACCENT} !important;
-#     font-family: 'Syne', sans-serif !important;
-#     font-size: 0.75rem !important;
-#     letter-spacing: 0.08em !important;
-#     text-transform: uppercase;
-#     border-bottom: 1px solid #1F2437;
-#     padding-bottom: 4px;
-#     margin-top: 1rem !important;
-# }}
-
 /* ---- Sliders & inputs ---- */
 [data-testid="stSlider"] > div > div > div > div {{
     background: {ACCENT} !important;
@@ -147,7 +93,7 @@ html, body, [data-testid="stAppViewContainer"] {{
 [data-baseweb="select"] div {{
     background: #0F1117 !important;
     border-color: #2A2F45 !important;
-    color: #000000 !important;
+    color: {TEXT} !important;
 }}
 
 /* ---- Buttons ---- */
