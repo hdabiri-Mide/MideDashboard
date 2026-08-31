@@ -136,89 +136,45 @@ html, body, [data-testid="stAppViewContainer"] {{
 }}
 
 /* ---- Tabs ---- */
-# [data-baseweb="tab-list"] {{
-#     background: {BG_CARD} !important;
-#     border-radius: 10px !important;
-#     padding: 4px !important;
-#     gap: 2px;
-#     border: 1px solid #1F2437;
-# }}
-# [data-baseweb="tab"] {{
-#     background: transparent !important;
-#     # color: {MUTED} !important;
-#     color: #FFFFFF !important;
-#     font-family: 'DM Mono', monospace !important;
-#     font-size: 0.78rem !important;
-#     letter-spacing: 0.04em;
-#     border-radius: 7px !important;
-#     padding: 6px 16px !important;
-#     border: none !important;
-#     transition: all 0.15s ease;
-# }}
-# [aria-selected="true"][data-baseweb="tab"] {{
-#     background: {ACCENT} !important;
-#     color: #0F1117 !important;
-#     # color: #FFFFFF !important;
-#     font-weight: 700 !important;
-# }}
-
-# /* Selected tab */
-# [aria-selected="true"][data-baseweb="tab"] {{
-#     background: {ACCENT} !important;
-#     color: #FFFFFF !important;
-#     font-weight: 700 !important;
-# }}
-
-# [aria-selected="true"][data-baseweb="tab"] > div,
-# [aria-selected="true"][data-baseweb="tab"] span {{
-#     color: #FFFFFF !important;
-# }}
-
-/* ---- Tabs ---- */
-[data-baseweb="tab-list"] {
-    background: #1A1D2E !important;
+[data-baseweb="tab-list"] {{
+    background: {BG_CARD} !important;
     border-radius: 10px !important;
     padding: 4px !important;
-    gap: 2px !important;
-    border: 1px solid #1F2437 !important;
-}
-
-/* Force the tab itself AND every child element to white */
-[data-baseweb="tab"],
-[data-baseweb="tab"] *,
-[data-baseweb="tab"] > div,
-[data-baseweb="tab"] > div > div,
-[data-baseweb="tab"] span,
-[data-baseweb="tab"] p {
-    color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
-    opacity: 1 !important;
-}
-
-[data-baseweb="tab"] {
+    gap: 2px;
+    border: 1px solid #1F2437;
+}}
+[data-baseweb="tab"] {{
     background: transparent !important;
+    # color: {MUTED} !important;
+    color: #FFFFFF !important;
     font-family: 'DM Mono', monospace !important;
     font-size: 0.78rem !important;
-    letter-spacing: 0.04em !important;
+    letter-spacing: 0.04em;
     border-radius: 7px !important;
     padding: 6px 16px !important;
     border: none !important;
-}
+    transition: all 0.15s ease;
+}}
+[aria-selected="true"][data-baseweb="tab"] {{
+    background: {ACCENT} !important;
+    color: #0F1117 !important;
+    # color: #FFFFFF !important;
+    font-weight: 700 !important;
+}}
 
 /* Selected tab */
-[data-baseweb="tab"][aria-selected="true"] {
-    background: #00C9A7 !important;
+[aria-selected="true"][data-baseweb="tab"] {{
+    background: {ACCENT} !important;
     color: #FFFFFF !important;
-}
+    font-weight: 700 !important;
+}}
 
-/* Keep selected tab text white */
-[data-baseweb="tab"][aria-selected="true"] *,
-[data-baseweb="tab"][aria-selected="true"] span,
-[data-baseweb="tab"][aria-selected="true"] p {
+[aria-selected="true"][data-baseweb="tab"] > div,
+[aria-selected="true"][data-baseweb="tab"] span {{
     color: #FFFFFF !important;
-    -webkit-text-fill-color: #FFFFFF !important;
-    opacity: 1 !important;
-}
+}}
+
+
 
 /* ---- Dataframe / table ---- */
 [data-testid="stDataFrame"] {{
