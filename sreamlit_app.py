@@ -179,6 +179,18 @@ html, body, [data-testid="stAppViewContainer"] {{
     opacity: 0.85 !important;
 }}
 
+/* ---- Axis dropdown text ---- */
+[data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] div {{
+    color: {ACCENT} !important;
+    -webkit-text-fill-color: {ACCENT} !important;
+}}
+
+/* ---- Axis dropdown options ---- */
+[data-baseweb="popover"] [role="option"] {{
+    color: {ACCENT} !important;
+    -webkit-text-fill-color: {ACCENT} !important;
+}}
+
 # /* ---- File uploader label ---- */
 # [data-testid="stFileUploader"] label,
 # [data-testid="stFileUploader"] label p {{
