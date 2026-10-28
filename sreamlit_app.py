@@ -28,7 +28,7 @@ st.set_page_config(
 )
 
 # ================== THEME ==================
-ACCENT   = "#FF8C00"   # teal-green
+ACCENT   = "#FF9F1C"   # teal-green
 ACCENT2  = "#845EF7"   # soft violet for secondary traces
 BG_CARD  = "#1A1D2E"
 BG_DARK  = "#0F1117"
@@ -131,10 +131,24 @@ html, body, [data-testid="stAppViewContainer"] {{
     opacity: 0.85 !important;
 }}
 
-/* ---- File uploader label ---- */
-[data-testid="stFileUploader"] label,
-[data-testid="stFileUploader"] label p {{
+# /* ---- File uploader label ---- */
+# [data-testid="stFileUploader"] label,
+# [data-testid="stFileUploader"] label p {{
+#     color: {ACCENT} !important;
+#     -webkit-text-fill-color: {ACCENT} !important;
+# }}
+
+/* ---- File uploader: Upload button ---- */
+[data-testid="stFileUploader"] section button {{
+    background-color: #FFFFFF !important;
     color: {ACCENT} !important;
+    border: 1px solid {ACCENT} !important;
+}}
+
+[data-testid="stFileUploader"] section button *,
+[data-testid="stFileUploader"] section button svg {{
+    color: {ACCENT} !important;
+    fill: {ACCENT} !important;
     -webkit-text-fill-color: {ACCENT} !important;
 }}
 
