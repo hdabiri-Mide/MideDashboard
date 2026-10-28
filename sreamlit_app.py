@@ -136,7 +136,7 @@ html, body, [data-testid="stAppViewContainer"] {{
 [data-testid="stFileUploader"] label p {
     color: #FF9F1C !important;
     -webkit-text-fill-color: #FF9F1C !important;
-}}
+}
 
 
 /* ---- Tabs ---- */
