@@ -447,13 +447,29 @@ h1 {{
     -webkit-text-fill-color: #FFFFFF !important;
 }}
 
-/* ===== FINAL SELECTBOX TEXT OVERRIDE ===== */
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div,
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div *,
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] input {{
-    color: {ACCENT} !important;
-    -webkit-text-fill-color: {ACCENT} !important;
+/* ===== FINAL SELECTBOX OVERRIDE ===== */
+/* Closed box: selected value */
+[data-testid="stSidebar"] [data-baseweb="select"],
+[data-testid="stSidebar"] [data-baseweb="select"] * {{
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
     opacity: 1 !important;
+}}
+
+/* Opened menu: every option and everything inside it */
+[data-baseweb="popover"] li,
+[data-baseweb="popover"] li *,
+[data-baseweb="popover"] [role="option"],
+[data-baseweb="popover"] [role="option"] * {{
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    opacity: 1 !important;
+}}
+
+/* Hover / selected highlight so it isn't gray-on-gray */
+[data-baseweb="popover"] [role="option"]:hover,
+[data-baseweb="popover"] [role="option"][aria-selected="true"] {{
+    background-color: #FFE8C2 !important;
 }}
 
 </style>
