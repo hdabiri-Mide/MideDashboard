@@ -104,6 +104,18 @@ html, body, [data-testid="stAppViewContainer"] {{
     color: {TEXT} !important;
 }}
 
+/* ---- Sidebar collapse / expand control ---- */
+[data-testid="stSidebarCollapseButton"] {{
+    color: {TEXT} !important;
+    background: transparent !important;
+}}
+
+[data-testid="stSidebarCollapseButton"] svg {{
+    color: {TEXT} !important;
+    fill: {TEXT} !important;
+    stroke: {TEXT} !important;
+}}
+
 /* ---- Sliders ---- */
 [data-testid="stSlider"] > div > div > div > div {{
     background: {ACCENT} !important;
