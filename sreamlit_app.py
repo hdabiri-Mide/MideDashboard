@@ -447,6 +447,15 @@ h1 {{
     -webkit-text-fill-color: #FFFFFF !important;
 }}
 
+/* ===== FINAL SELECTBOX TEXT OVERRIDE ===== */
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div *,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] input {{
+    color: {ACCENT} !important;
+    -webkit-text-fill-color: {ACCENT} !important;
+    opacity: 1 !important;
+}}
+
 </style>
 """, unsafe_allow_html=True)
 
