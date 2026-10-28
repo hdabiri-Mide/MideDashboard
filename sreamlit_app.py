@@ -116,6 +116,33 @@ html, body, [data-testid="stAppViewContainer"] {{
     stroke: {TEXT} !important;
 }}
 
+/* ---- Model and Axis dropdowns ---- */
+[data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div {{
+    background-color: #FFFFFF !important;
+    color: {ACCENT} !important;
+    border-color: {ACCENT} !important;
+}}
+
+/* Selected value text */
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] div,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] span {{
+    color: {ACCENT} !important;
+    -webkit-text-fill-color: {ACCENT} !important;
+}}
+
+/* Dropdown arrow */
+[data-testid="stSidebar"] [data-testid="stSelectbox"] svg {{
+    fill: {ACCENT} !important;
+    color: {ACCENT} !important;
+}}
+
+/* Dropdown options when opened */
+[data-baseweb="popover"] [role="option"] {{
+    color: {ACCENT} !important;
+    -webkit-text-fill-color: {ACCENT} !important;
+    background-color: #FFFFFF !important;
+}}
+
 /* ---- Sliders ---- */
 [data-testid="stSlider"] > div > div > div > div {{
     background: {ACCENT} !important;
