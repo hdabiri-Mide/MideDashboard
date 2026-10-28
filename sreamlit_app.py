@@ -28,7 +28,7 @@ st.set_page_config(
 )
 
 # ================== THEME ==================
-ACCENT   = "#00C9A7"   # teal-green
+ACCENT   = "#FF8C00"   # teal-green
 ACCENT2  = "#845EF7"   # soft violet for secondary traces
 BG_CARD  = "#1A1D2E"
 BG_DARK  = "#0F1117"
