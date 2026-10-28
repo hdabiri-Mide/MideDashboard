@@ -233,13 +233,13 @@ html, body, [data-testid="stAppViewContainer"] {{
     border-color: {ACCENT} !important;
 }}
 
-/* Force selected dropdown text to orange */
+/* Selected dropdown text */
 [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] *,
 [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] span {{
     color: {ACCENT} !important;
     -webkit-text-fill-color: {ACCENT} !important;
     opacity: 1 !important;
-}
+}}
 
 /* Dropdown arrow */
 [data-testid="stSidebar"] [data-testid="stSelectbox"] svg {{
