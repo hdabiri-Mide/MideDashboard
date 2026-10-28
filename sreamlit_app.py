@@ -113,11 +113,28 @@ html, body, [data-testid="stAppViewContainer"] {{
 
 
 /* ---- Buttons ---- */
-[data-testid="stSidebar"] button,
+# [data-testid="stSidebar"] button,
+# .stButton > button {{
+#     background: {ACCENT} !important;
+#     color: #0F1117 !important;
+#     # color: #FFFFFF !important;
+#     border: none !important;
+#     border-radius: 6px !important;
+#     font-family: 'Syne', sans-serif !important;
+#     font-weight: 700 !important;
+#     letter-spacing: 0.05em !important;
+#     padding: 0.45rem 1.2rem !important;
+#     transition: opacity 0.15s ease !important;
+#     width: 100%;
+# }}
+# .stButton > button:hover {{
+#     opacity: 0.85 !important;
+# }}
+
+/* Style only actual Streamlit action buttons */
 .stButton > button {{
     background: {ACCENT} !important;
     color: #0F1117 !important;
-    # color: #FFFFFF !important;
     border: none !important;
     border-radius: 6px !important;
     font-family: 'Syne', sans-serif !important;
@@ -127,6 +144,7 @@ html, body, [data-testid="stAppViewContainer"] {{
     transition: opacity 0.15s ease !important;
     width: 100%;
 }}
+
 .stButton > button:hover {{
     opacity: 0.85 !important;
 }}
