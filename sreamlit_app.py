@@ -133,10 +133,10 @@ html, body, [data-testid="stAppViewContainer"] {{
 
 /* ---- File uploader label ---- */
 [data-testid="stFileUploader"] label,
-[data-testid="stFileUploader"] label p {
-    color: #FF9F1C !important;
-    -webkit-text-fill-color: #FF9F1C !important;
-}
+[data-testid="stFileUploader"] label p {{
+    color: {ACCENT} !important;
+    -webkit-text-fill-color: {ACCENT} !important;
+}}
 
 
 /* ---- Tabs ---- */
