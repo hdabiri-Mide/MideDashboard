@@ -255,13 +255,13 @@ div[data-baseweb="select"] [aria-selected="true"] {{
 div[data-baseweb="select"] > div {{
     background-color: #FFFFFF !important;
     border-color: #FF9F1C !important;
-}
+}}
 
 /* Dropdown arrow */
 [data-testid="stSidebar"] [data-testid="stSelectbox"] svg {{
     color: #000000 !important;
     fill: #000000 !important;
-}
+}}
 
 /* Options in the opened menu */
 [data-baseweb="popover"] [role="option"] {{
