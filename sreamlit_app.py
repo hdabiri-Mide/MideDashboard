@@ -28,7 +28,7 @@ st.set_page_config(
 )
 
 # ================== THEME ==================
-ACCENT   = "#FF9F1C"   # teal-green
+ACCENT   = "#FF9F1C"   
 ACCENT2  = "#845EF7"   # soft violet for secondary traces
 BG_CARD  = "#1A1D2E"
 BG_DARK  = "#0F1117"
@@ -123,18 +123,18 @@ html, body, [data-testid="stAppViewContainer"] {{
 #     border-color: {ACCENT} !important;
 # }}
 
-/* Selected value text */
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] div,
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] span {{
-    color: {ACCENT} !important;
-    -webkit-text-fill-color: {ACCENT} !important;
-}}
+# /* Selected value text */
+# [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] div,
+# [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] span {{
+#     color: {ACCENT} !important;
+#     -webkit-text-fill-color: {ACCENT} !important;
+# }}
 
-/* Dropdown arrow */
-[data-testid="stSidebar"] [data-testid="stSelectbox"] svg {{
-    fill: {ACCENT} !important;
-    color: {ACCENT} !important;
-}}
+# /* Dropdown arrow */
+# [data-testid="stSidebar"] [data-testid="stSelectbox"] svg {{
+#     fill: {ACCENT} !important;
+#     color: {ACCENT} !important;
+# }}
 
 /* Dropdown options when opened */
 [data-baseweb="popover"] [role="option"] {{
@@ -225,12 +225,49 @@ html, body, [data-testid="stAppViewContainer"] {{
 #     -webkit-text-fill-color: {ACCENT} !important;
 # }}
 
-/* ---- Model and Axis dropdown styling ---- */
+# /* ---- Model and Axis dropdown styling ---- */
 
-/* White dropdown background and orange border */
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {{
+# /* White dropdown background and orange border */
+# [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {{
+#     background-color: #FFFFFF !important;
+#     border-color: {ACCENT} !important;
+# }}
+
+/* ---- Model and Axis: selected values ---- */
+
+/* Selected text inside the dropdown */
+[data-testid="stSidebar"] [data-testid="stSelectbox"]
+div[data-baseweb="select"] div[class*="singleValue"] {{
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    opacity: 1 !important;
+}
+
+/* Fallback for Streamlit/Base Web versions using different classes */
+[data-testid="stSidebar"] [data-testid="stSelectbox"]
+div[data-baseweb="select"] [aria-selected="true"] {{
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+}
+
+/* Dropdown background and border */
+[data-testid="stSidebar"] [data-testid="stSelectbox"]
+div[data-baseweb="select"] > div {{
     background-color: #FFFFFF !important;
-    border-color: {ACCENT} !important;
+    border-color: #FF9F1C !important;
+}
+
+/* Dropdown arrow */
+[data-testid="stSidebar"] [data-testid="stSelectbox"] svg {{
+    color: #000000 !important;
+    fill: #000000 !important;
+}
+
+/* Options in the opened menu */
+[data-baseweb="popover"] [role="option"] {{
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    background-color: #FFFFFF !important;
 }}
 
 /* Selected dropdown text */
