@@ -74,18 +74,6 @@ html, body, [data-testid="stAppViewContainer"] {{
 }}
 
 
-# /* ---- Sidebar ---- */
-# [data-testid="stSidebar"] {{
-#     background: {BG_CARD} !important;
-#     border-right: 1px solid #1F2437;
-# }}
-
-# [data-testid="stSidebar"] * {{
-#     font-family: 'DM Mono', monospace !important;
-#     font-size: 0.82rem !important;
-#     color: {TEXT} !important;
-# }}
-
 /* ---- Sidebar ---- */
 [data-testid="stSidebar"] {{
     background: {BG_CARD} !important;
@@ -115,26 +103,6 @@ html, body, [data-testid="stAppViewContainer"] {{
     fill: {TEXT} !important;
     stroke: {TEXT} !important;
 }}
-
-# /* ---- Model and Axis dropdowns ---- */   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-# [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div {{
-#     background-color: #FFFFFF !important;
-#     color: {ACCENT} !important;
-#     border-color: {ACCENT} !important;
-# }}
-
-# /* Selected value text */
-# [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] div,
-# [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] span {{
-#     color: {ACCENT} !important;
-#     -webkit-text-fill-color: {ACCENT} !important;
-# }}
-
-# /* Dropdown arrow */
-# [data-testid="stSidebar"] [data-testid="stSelectbox"] svg {{
-#     fill: {ACCENT} !important;
-#     color: {ACCENT} !important;
-# }}
 
 /* Dropdown options when opened */
 [data-baseweb="popover"] [role="option"] {{
@@ -170,23 +138,7 @@ html, body, [data-testid="stAppViewContainer"] {{
 
 
 /* ---- Buttons ---- */
-# [data-testid="stSidebar"] button,
-# .stButton > button {{
-#     background: {ACCENT} !important;
-#     color: #0F1117 !important;
-#     # color: #FFFFFF !important;
-#     border: none !important;
-#     border-radius: 6px !important;
-#     font-family: 'Syne', sans-serif !important;
-#     font-weight: 700 !important;
-#     letter-spacing: 0.05em !important;
-#     padding: 0.45rem 1.2rem !important;
-#     transition: opacity 0.15s ease !important;
-#     width: 100%;
-# }}
-# .stButton > button:hover {{
-#     opacity: 0.85 !important;
-# }}
+
 
 /* Style only actual Streamlit action buttons */
 .stButton > button {{
@@ -205,33 +157,6 @@ html, body, [data-testid="stAppViewContainer"] {{
 .stButton > button:hover {{
     opacity: 0.85 !important;
 }}
-
-# /* ---- Axis dropdown text ---- */   <<<<<<<<<<<<<<<<<<<<<<<<<<<
-# [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] div {{
-#     color: {ACCENT} !important;
-#     -webkit-text-fill-color: {ACCENT} !important;
-# }}
-
-# /* ---- Axis dropdown options ---- */ <<<<<<<<<<<<<<<<<<<<<<<<<
-# [data-baseweb="popover"] [role="option"] {{
-#     color: {ACCENT} !important;
-#     -webkit-text-fill-color: {ACCENT} !important;
-# }}
-
-# /* ---- File uploader label ---- */
-# [data-testid="stFileUploader"] label,
-# [data-testid="stFileUploader"] label p {{
-#     color: {ACCENT} !important;
-#     -webkit-text-fill-color: {ACCENT} !important;
-# }}
-
-# /* ---- Model and Axis dropdown styling ---- */
-
-# /* White dropdown background and orange border */
-# [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {{
-#     background-color: #FFFFFF !important;
-#     border-color: {ACCENT} !important;
-# }}
 
 /* ---- Model and Axis: selected values ---- */
 
@@ -484,12 +409,6 @@ div[data-baseweb="select"] > div {{
 }}
 
 /* ---- Main title ---- */
-# h1 {{
-#     font-family: 'Syne', sans-serif !important;
-#     font-weight: 800 !important;
-#     color: {TEXT} !important;
-#     letter-spacing: -0.02em !important;
-# }}
 
 h1 {{
     font-family: 'Arial', sans-serif !important;
