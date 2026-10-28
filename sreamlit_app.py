@@ -808,7 +808,13 @@ if uploaded_file:
                 plotly_chart(fig)
 
         else:
-            st.info("Configure settings in the sidebar, then press **▶ Run Anomaly Model**.")
+            st.markdown(
+                f'<div style="color:{ACCENT};">'
+                'Configure settings in the sidebar, then press '
+                '<b>▶ Run Anomaly Model</b>.'
+                '</div>',
+                unsafe_allow_html=True
+            )
 
 else:
     # ── EMPTY STATE ──────────────────────────────────────────────
