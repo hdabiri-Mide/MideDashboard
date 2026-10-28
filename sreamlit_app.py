@@ -137,7 +137,7 @@ html, body, [data-testid="stAppViewContainer"] {{
     border: 1.5px dashed {ACCENT} !important;
     border-radius: 10px !important;
     # color: {MUTED} !important;
-    color: #FFFFFF !important;
+    color: #FF9F1C !important;
 }}
 
 
