@@ -74,13 +74,31 @@ html, body, [data-testid="stAppViewContainer"] {{
 }}
 
 
+# /* ---- Sidebar ---- */
+# [data-testid="stSidebar"] {{
+#     background: {BG_CARD} !important;
+#     border-right: 1px solid #1F2437;
+# }}
+
+# [data-testid="stSidebar"] * {{
+#     font-family: 'DM Mono', monospace !important;
+#     font-size: 0.82rem !important;
+#     color: {TEXT} !important;
+# }}
+
 /* ---- Sidebar ---- */
 [data-testid="stSidebar"] {{
     background: {BG_CARD} !important;
     border-right: 1px solid #1F2437;
 }}
 
-[data-testid="stSidebar"] * {{
+/* Apply typography to text elements, not every element.
+   This preserves Streamlit's built-in icon fonts. */
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] input,
+[data-testid="stSidebar"] textarea,
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {{
     font-family: 'DM Mono', monospace !important;
     font-size: 0.82rem !important;
     color: {TEXT} !important;
