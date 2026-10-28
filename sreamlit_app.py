@@ -241,14 +241,14 @@ div[data-baseweb="select"] div[class*="singleValue"] {{
     color: #000000 !important;
     -webkit-text-fill-color: #000000 !important;
     opacity: 1 !important;
-}
+}}
 
 /* Fallback for Streamlit/Base Web versions using different classes */
 [data-testid="stSidebar"] [data-testid="stSelectbox"]
 div[data-baseweb="select"] [aria-selected="true"] {{
     color: #000000 !important;
     -webkit-text-fill-color: #000000 !important;
-}
+}}
 
 /* Dropdown background and border */
 [data-testid="stSidebar"] [data-testid="stSelectbox"]
