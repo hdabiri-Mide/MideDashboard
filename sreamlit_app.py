@@ -131,13 +131,11 @@ html, body, [data-testid="stAppViewContainer"] {{
     opacity: 0.85 !important;
 }}
 
-/* ---- File uploader ---- */
-[data-testid="stFileUploadDropzone"] {{
-    background: {BG_CARD} !important;
-    border: 1.5px dashed {ACCENT} !important;
-    border-radius: 10px !important;
-    # color: {MUTED} !important;
+/* ---- File uploader label ---- */
+[data-testid="stFileUploader"] label,
+[data-testid="stFileUploader"] label p {
     color: #FF9F1C !important;
+    -webkit-text-fill-color: #FF9F1C !important;
 }}
 
 
