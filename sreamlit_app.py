@@ -116,12 +116,12 @@ html, body, [data-testid="stAppViewContainer"] {{
     stroke: {TEXT} !important;
 }}
 
-/* ---- Model and Axis dropdowns ---- */
-[data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div {{
-    background-color: #FFFFFF !important;
-    color: {ACCENT} !important;
-    border-color: {ACCENT} !important;
-}}
+# /* ---- Model and Axis dropdowns ---- */   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div {{
+#     background-color: #FFFFFF !important;
+#     color: {ACCENT} !important;
+#     border-color: {ACCENT} !important;
+# }}
 
 /* Selected value text */
 [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] div,
@@ -206,17 +206,17 @@ html, body, [data-testid="stAppViewContainer"] {{
     opacity: 0.85 !important;
 }}
 
-/* ---- Axis dropdown text ---- */
-[data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] div {{
-    color: {ACCENT} !important;
-    -webkit-text-fill-color: {ACCENT} !important;
-}}
+# /* ---- Axis dropdown text ---- */   <<<<<<<<<<<<<<<<<<<<<<<<<<<
+# [data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] div {{
+#     color: {ACCENT} !important;
+#     -webkit-text-fill-color: {ACCENT} !important;
+# }}
 
-/* ---- Axis dropdown options ---- */
-[data-baseweb="popover"] [role="option"] {{
-    color: {ACCENT} !important;
-    -webkit-text-fill-color: {ACCENT} !important;
-}}
+# /* ---- Axis dropdown options ---- */ <<<<<<<<<<<<<<<<<<<<<<<<<
+# [data-baseweb="popover"] [role="option"] {{
+#     color: {ACCENT} !important;
+#     -webkit-text-fill-color: {ACCENT} !important;
+# }}
 
 # /* ---- File uploader label ---- */
 # [data-testid="stFileUploader"] label,
@@ -224,6 +224,36 @@ html, body, [data-testid="stAppViewContainer"] {{
 #     color: {ACCENT} !important;
 #     -webkit-text-fill-color: {ACCENT} !important;
 # }}
+
+/* ---- Model and Axis dropdown styling ---- */
+
+/* White dropdown background and orange border */
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div {{
+    background-color: #FFFFFF !important;
+    border-color: {ACCENT} !important;
+}}
+
+/* Force selected dropdown text to orange */
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] *,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] span {{
+    color: {ACCENT} !important;
+    -webkit-text-fill-color: {ACCENT} !important;
+    opacity: 1 !important;
+}
+
+/* Dropdown arrow */
+[data-testid="stSidebar"] [data-testid="stSelectbox"] svg {{
+    color: {ACCENT} !important;
+    fill: {ACCENT} !important;
+    opacity: 1 !important;
+}}
+
+/* Options in the opened dropdown menu */
+[data-baseweb="popover"] [role="option"] {{
+    color: {ACCENT} !important;
+    -webkit-text-fill-color: {ACCENT} !important;
+    background-color: #FFFFFF !important;
+}}
 
 /* ---- File uploader: Upload button ---- */
 [data-testid="stFileUploader"] section button {{
